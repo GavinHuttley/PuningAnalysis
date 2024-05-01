@@ -378,3 +378,50 @@ def simulation2(repeat, n, pi, max_time, rate_matrices_dict, markov_order):
         
     return theo_probs_df, sim_props_df
 
+def average_substitution(Q, t, ancestor_sequence, repeats, markov_order):
+    """This one from Puning 
+
+    Parameters
+    ----------
+    Q : _type_
+        _description_
+    t : _type_
+        _description_
+    ancestor_sequence : _type_
+        _description_
+    repeats : _type_
+        _description_
+    markov_order : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    n = len(ancestor_sequence)
+    ns_per_site_list = []
+    ns_total_list = []
+    for i in range(repeats):
+        history = simulate_seq(ancestor_sequence, t, Q, markov_order)[1]
+        ns_total = len(history)-1
+        ns_per_site = ns_total/n
+        ns_per_site_list.append(ns_per_site)
+        ns_total_list.append(ns_total)
+    average_ns_total = np.average(ns_total_list)
+    average_ns_per_site = average_ns_total/n
+
+    return ns_per_site_list, average_ns_per_site
+
+import statistics
+def get_descrip_stat(ns_dict):
+    descrip_stat = {}
+    for key, value in ns_dict.items():
+        average = statistics.mean(value[0])
+        std_dev = statistics.stdev(value[0])
+        cv = (std_dev/average)*100
+        descrip_stat[key] = {'average': average, 'standard_deviation': std_dev, 'coefficient_of_variation': cv}
+
+    
+    return descrip_stat
+
