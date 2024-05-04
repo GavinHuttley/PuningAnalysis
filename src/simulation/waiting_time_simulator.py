@@ -425,3 +425,8 @@ def get_descrip_stat(ns_dict):
     
     return descrip_stat
 
+def join_number_to_base(seq):
+    number_to_base = {'0': 'T', '1': 'C', '2': 'A', '3': 'G'}
+    ances_seq_join_alpha = ''.join(number_to_base[number] for number in seq)
+    return(ances_seq_join_alpha)
+
