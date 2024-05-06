@@ -1,8 +1,5 @@
-from typing import Optional
 import numpy as np
 from scipy.linalg import expm
-import cogent3
-import random
 from cogent3 import make_seq
 from cogent3.util.dict_array import DictArrayTemplate
 from cogent3.core.sequence import Sequence
@@ -248,7 +245,7 @@ class SeqSimulate:
         
     def simulate_sequence(self, rng, ancestor_seq: SeqType = None) -> SeqsCollectionType:
         if ancestor_seq == None:
-            ancestor_sequence = generate_ancestor(rng)
+            ancestor_sequence = self.generate_ancestor(rng)
         else:
             ancestor_sequence = ancestor_seq
         names = ['ancestor',]
