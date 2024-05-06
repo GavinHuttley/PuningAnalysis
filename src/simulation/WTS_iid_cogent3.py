@@ -1,3 +1,4 @@
+from typing import Optional
 import numpy as np
 from scipy.linalg import expm
 import cogent3
@@ -9,10 +10,11 @@ from cogent3.core.sequence import Sequence
 from cogent3.app.composable import define_app
 from cogent3.app.typing import SeqType, SeqsCollectionType
 from cogent3 import make_unaligned_seqs
+from numpy.random import default_rng
 
 
 
-def generate_ancestor_cogent3(n: int, pi=None) -> Sequence:
+def generate_ancestor_cogent3(n: int, rng, pi=None) -> Sequence:
     """
     Generate an ancestor DNA sequence of length n with customizable probability distribution.
 
@@ -24,31 +26,23 @@ def generate_ancestor_cogent3(n: int, pi=None) -> Sequence:
     Output: 
         cogent3.core.alignment.Alignment: The randomly generated DNA sequence of length n.
     """
-    nucleotides_index = ['0', '1', '2', '3']  # T, C, A, G
+    nucleotides = ['T', 'C', 'A', 'G']
+
     if pi is None:
-        # If no probability distribution is provided, use a random distribution, equal probabilities of 0.25
-        seq_number = list(random.choices(nucleotides_index, weights=pi, k=n))
-        number_to_base = {'0': 'T', '1': 'C', '2': 'A', '3': 'G'}
-        ances_seq_join_alpha = ''.join(number_to_base[number] for number in seq_number)
+        pi = [0.25, 0.25, 0.25, 0.25]  # Default equal probabilities if none provided
+    elif len(pi) != 4:
+        raise ValueError("Probability distribution must contain exactly 4 values.")
+    elif not np.isclose(sum(pi), 1):
+        raise ValueError("Probabilities must sum to 1.")
 
-        return make_seq(ances_seq_join_alpha, 'dna')
-    else:
-        # If a custom probability distribution is provided, use it
-        if len(pi) != 4:
-            raise ValueError("Probability distribution must contain exactly 4 values.")
-        
-        # Check if the probabilities sum to 1
-        if abs(sum(pi) - 1) > 1e-10:
-            raise ValueError("Probabilities must sum to 1.")
-        
-        seq_number = list(random.choices(nucleotides_index, weights=pi, k=n))
-        number_to_base = {'0': 'T', '1': 'C', '2': 'A', '3': 'G'}
-        ances_seq_join_alpha = ''.join(number_to_base[number] for number in seq_number)
+    # Using np.random.Generator.choice instead of random.choices
+    seq = rng.choice(nucleotides, size=n, p=pi)
+    ancestor_sequence = make_seq(''.join(seq), moltype='dna')
 
-        return make_seq(seq = ances_seq_join_alpha, moltype = 'dna')
+    return ancestor_sequence
 
 
-def generate_rate_matrix_cogent3():
+def generate_rate_matrix_cogent3(rng):
     """
     Generate a single 4 by 4 rate matrix.
 
@@ -180,15 +174,19 @@ def simulate_seq_iid_cogent3(ancestor_seq: Sequence, max_time : float, Q: DictAr
         return aln_history
     else:
         aln_history = make_unaligned_seqs(history[:-1])
-        return aln_history
+        final_seq = history[-2]
+        return (final_seq, aln_history)
 
 
 
 
 ###define the cogent3 app
 
+from numpy.random import SeedSequence, default_rng
+
+
 @define_app
-class simulate_seq_iid:
+class SeqSimulate:
     """
     Input:
         ancestor_seq (cogent3.Sequence): The initial non-substituted generated DNA sequence of length n.
@@ -201,39 +199,96 @@ class simulate_seq_iid:
         
     """
 
-    def __init__(self, max_time: float, Q: DictArrayTemplate):
+    def __init__(self, max_time: float, Q: DictArrayTemplate, length: int, num_simulations: int, seed: int = None, pi: list = None):
         self.max_time = max_time
         self.Q = Q
+        self.n = length
+        self.num_simulations = num_simulations
+        self.seed = seed
+        self.pi = pi if pi is not None else [0.25, 0.25, 0.25, 0.25]
+        self.ss = SeedSequence(self.seed)
+        self.child_seeds = self.ss.spawn(self.num_simulations)
+        self.rngs = [default_rng(s) for s in self.child_seeds]
 
-    def main(self, ancestor_seq: SeqType) -> SeqsCollectionType:
-        history = [ancestor_seq,]
+    def main(self, ancestor_seq: SeqType = None) -> SeqsCollectionType:
+        results = []
+        for rng in self.rngs:
+            simulation_result = self.simulate_sequence(rng, ancestor_seq)
+            results.append(simulation_result)
+        return results
+    
+    def generate_ancestor(self, rng) -> Sequence:
+        """
+        Generate an ancestor DNA sequence of length n with customizable probability distribution.
+
+        Input: 
+            n (int): The desired length of the ancestor DNA sequence.
+            pi (list, optional): Array of probabilities for each nucleotide. 
+
+        Output: 
+            cogent3.core.alignment.Alignment: The randomly generated DNA sequence of length n.
+        """
+        nucleotides = ['T', 'C', 'A', 'G']  # Correctly map indices to bases directly
+
+        if len(self.pi) != 4:
+            raise ValueError("Probability distribution must contain exactly 4 values.")
+        else:
+            # If a custom probability distribution is provided, use it
+            if len(self.pi) != 4:
+                raise ValueError("Probability distribution must contain exactly 4 values.")
+            
+            # Check if the probabilities sum to 1
+            if abs(sum(self.pi) - 1) > 1e-10:
+                raise ValueError("Probabilities must sum to 1.")
+            
+        seq = rng.choices(nucleotides, weights=self.pi, k=self.n)
+        ancestor_sequence = make_seq(''.join(seq), moltype='dna')
+
+        return ancestor_sequence
+        
+    def simulate_sequence(self, rng, ancestor_seq: SeqType = None) -> SeqsCollectionType:
+        if ancestor_seq == None:
+            ancestor_sequence = generate_ancestor(rng)
+        else:
+            ancestor_sequence = ancestor_seq
+        names = ['ancestor',]
         time_passed = 0
-        DNA_seq = ancestor_seq.copy()
-        waiting_times, min_position, min_time = self.initialize_waiting_times_iid_cogent3(DNA_seq, self.Q)
+        history = [ancestor_sequence,]
+        DNA_seq = ancestor_sequence.copy()
+        waiting_times, min_position, min_time = self.initialize_waiting_times_iid(DNA_seq, rng)
+        i = 1
 
         while time_passed <= self.max_time:
             seq_index = min_position[0]
             new_base = min_position[1]
-            substitution_time = min_time 
-            waiting_times, min_position, min_time = self.update_waiting_times_iid_cogent3(DNA_seq, self.Q, waiting_times, min_position, min_time)
+            substitution_time = min_time
+            waiting_times, min_position, min_time = self.update_waiting_times_iid(DNA_seq, waiting_times, min_position, min_time, rng)
             seq_list = list(DNA_seq)
             seq_list[seq_index] = new_base
-            DNA_seq = make_seq(str(''.join(seq_list)))
+            DNA_seq = make_seq(''.join(seq_list), moltype='dna')
             history.append(DNA_seq.copy())
+            names.append(f'seq{i}')
             time_passed += substitution_time
+            i += 1
 
         if len(history) <= 2: # meaning time for any substitution to occur exceeded the max_time, no substitution took place
-            return (ancestor_seq, history[:-1])
+            seq_dict = {name:seq for (name, seq) in  zip(names, history)}
+            aln_history = make_unaligned_seqs(data = seq_dict, moltype='dna')
+            
+            return aln_history
         else:
-            return (history[-2], history[:-1])
+            seq_dict = {name:seq for (name, seq) in  zip(names, history)}
+            aln_history = make_unaligned_seqs(data = seq_dict, moltype='dna')
+            return aln_history
 
-    def initialize_waiting_times_iid_cogent3(self, DNA_seq: SeqsCollectionType) -> tuple:
+
+    
+    def initialize_waiting_times_iid(self, DNA_seq: SeqsCollectionType, rng) -> tuple:
         """
         Initialize waiting times for DNA sequence substitution.
 
         Input:
             DNA_seq (Sequence): The DNA sequence.
-            Q (DictArrayTemplate): A rate matrix for DNA substitution.
 
         Output:
             tuple: A tuple containing the waiting times, the position of the base with the smallest substitution time,
@@ -242,7 +297,7 @@ class simulate_seq_iid:
         waiting_times = np.full((len(DNA_seq), 4), np.inf)
         min_time = np.inf
         min_position = None
-        nucleotides = ['T', 'C', 'G', 'A']
+        nucleotides = ['T', 'C', 'A', 'G']
 
         for seq_index in range(len(DNA_seq)):
             curr_base = str(DNA_seq[seq_index])
@@ -250,7 +305,7 @@ class simulate_seq_iid:
                 if next_base != curr_base:
                     next_base_index = nucleotides.index(next_base)
                     rate = 1 / self.Q[curr_base][next_base]
-                    time = np.random.exponential(rate)
+                    time = rng.exponential(rate)
                     waiting_times[seq_index, next_base_index] = time
                     if time < min_time:
                         min_time = time
@@ -258,7 +313,11 @@ class simulate_seq_iid:
 
         return waiting_times, min_position, min_time
 
-    def update_waiting_times_iid_cogent3(self, DNA_seq: SeqsCollectionType, waiting_times: np.ndarray, min_position: tuple, min_time: float) -> tuple:
+    
+    
+    
+    
+    def update_waiting_times_iid(self, DNA_seq: SeqsCollectionType, waiting_times: np.ndarray, min_position: tuple, min_time: float, rng) -> tuple:
         """
         Update waiting times for DNA sequence substitution.
 
@@ -274,15 +333,15 @@ class simulate_seq_iid:
                    and the new minimum time needed for the next substitution.
         """
 
-        seq_index = min_position[0] # obtain the index of the current base that is about to be substituted in the sequence
-        new_base = min_position[1] # obtain the new base that is going to substitute the current base
-        
+        seq_index = min_position[0]
+        new_base = min_position[1]
+
+        # Update the sequence
         seq_list = list(DNA_seq)
         seq_list[seq_index] = new_base
-        DNA_seq = make_seq(str(''.join(seq_list)))
-        
-        waiting_times, min_position, min_time = self.initialize_waiting_times_iid_cogent3(DNA_seq, self.Q)
+        DNA_seq = make_seq(''.join(seq_list), moltype='dna')
 
+        waiting_times, min_position, min_time = self.initialize_waiting_times_iid(DNA_seq, rng)
+
+        # Reinitialize the waiting times
         return waiting_times, min_position, min_time
-
-
