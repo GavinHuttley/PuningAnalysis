@@ -39,7 +39,7 @@ def generate_ancestor_cogent3(n: int, rng, pi=None) -> Sequence:
     return ancestor_sequence
 
 
-def generate_rate_matrix_cogent3(rng):
+def generate_rate_matrix_cogent3():
     """
     Generate a single 4 by 4 rate matrix.
 
@@ -180,7 +180,6 @@ def simulate_seq_iid_cogent3(ancestor_seq: Sequence, max_time : float, Q: DictAr
 ###define the cogent3 app
 
 from numpy.random import SeedSequence, default_rng
-
 
 @define_app
 class SeqSimulate:
