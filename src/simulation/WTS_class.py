@@ -3,7 +3,6 @@ from cogent3 import make_seq
 from numpy.random import SeedSequence, default_rng
 from cogent3 import make_unaligned_seqs
 from cogent3 import Sequence
-from waiting_time_simulator_iid import generate_rate_matrix_cogent3
 
 
 def transform_Q_to_array(Q_dict):
@@ -209,8 +208,8 @@ def get_histograms2(ns_dict, theoretical_ns_list):
     # Set consistent x-axis range across all subplots
     for r in range(1, rows+1):
         for c in range(1, cols+1):
-            fig.update_xaxes(range=[-0.09, 0.06], row=r, col=c)
-
+            fig.update_xaxes(range=[x_min, x_max], row=r, col=c)
+            fig.update_yaxes(range=[0, 80], row=r, col=c)
     return fig
 
 
