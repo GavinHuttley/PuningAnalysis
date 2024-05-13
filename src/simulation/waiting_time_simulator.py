@@ -1,11 +1,8 @@
-from collections import Counter
-import itertools
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import random
 from scipy.linalg import expm
-
+import itertools
+import random
+ 
 def generate_ancestor(n, pi=None):
     """
     Generate an ancestor DNA sequence of length n with customizable probability distribution.
@@ -43,6 +40,11 @@ def generate_rate_matrix():
     Output: 
         rate_matrix (array): A single rate matrix.
 
+    Example output: 
+    [[-0.8, 0.1, 0.4, 0.3],
+    [0.3, -0.7, 0.2, 0.2],
+    [0.1, 0.2, -0.6, 0.3],
+    [0.1, 0.2, 0.4, -0.7]]
     """
     matrix = np.zeros((4, 4))
     for i in range(4):
@@ -57,7 +59,9 @@ def generate_rate_matrix():
     rate_matrix = matrix.tolist()
     return rate_matrix
 
-def generate_rate_matrices(markov_order):
+
+
+def generate_rate_matrices(markov_order:int):
     """
     Input:
         markov_order (int): The Markov order.
@@ -92,7 +96,9 @@ def generate_rate_matrices(markov_order):
             rate_matrices[perm] = rate_matrix
 
         return rate_matrices
-    
+
+
+
 
 def transition_matrix(Q, t):
     """
@@ -108,6 +114,7 @@ def transition_matrix(Q, t):
     Qt = np.dot(Q, t)
     P = expm(Qt)
     return P
+
 
 def get_context(seq_index, DNA_seq, markov_order, anchor_base = '0'):
     """
@@ -153,7 +160,8 @@ def get_context(seq_index, DNA_seq, markov_order, anchor_base = '0'):
             right_base = DNA_seq[seq_index+1:seq_index+1+markov_order]
             context = (left_base, right_base)
         return context
-    
+
+
 def initialize_waiting_times(DNA_seq, Q_dict, markov_order):
     """
     Input:
@@ -176,12 +184,11 @@ def initialize_waiting_times(DNA_seq, Q_dict, markov_order):
 
     for seq_index in range(len(DNA_seq)):
         curr_base = int(DNA_seq[seq_index])
-
         curr_context = get_context(seq_index, DNA_seq, markov_order)
 
         for next_base in range(4):
             if next_base != curr_base:
-                rate = 1/(Q_dict[curr_context][curr_base][next_base])
+                rate = 1/(Q_dict[curr_context][curr_base, next_base])
                 time = np.random.exponential(rate)
                 waiting_times[seq_index, next_base] = time
                 if time < min_time:
@@ -189,6 +196,8 @@ def initialize_waiting_times(DNA_seq, Q_dict, markov_order):
                     min_position = (seq_index, next_base)
 
     return waiting_times, min_position, min_time
+
+
 
 def get_neighbour_indices(DNA_seq, seq_index, markov_order):
 
@@ -214,6 +223,7 @@ def get_neighbour_indices(DNA_seq, seq_index, markov_order):
             neighbours.append(index)
 
         return neighbours
+
 
 def update_waiting_times(DNA_seq, Q_dict, waiting_times, min_position, min_time, markov_order):
     """
@@ -247,6 +257,8 @@ def update_waiting_times(DNA_seq, Q_dict, waiting_times, min_position, min_time,
     waiting_times, min_position, min_time = initialize_waiting_times(DNA_seq, Q_dict, markov_order)
 
     return waiting_times, min_position, min_time
+
+
 
 def simulate_seq(ancestor_seq, max_time, rate_matrices_dict, markov_order):
     """
@@ -286,147 +298,4 @@ def simulate_seq(ancestor_seq, max_time, rate_matrices_dict, markov_order):
         return (history[-2], history[:-1])
     
 
-#Simulation study
-
-def generate_stats(theo_df, sim_df):
-    """ 
-    Input: 
-        theo_df (dataframe): Dataframe containing all the theoretical propbabilities of each transition.
-        sim_df (dataframe): Dataframe containing all the simulated proportions of each transition, each row representing one repeat.
-        
-    Output:
-        None        
-    """
-    # Calculate mean, standard deviation, and standard error for each column
-    mean_sim = sim_df.mean()
-    std_sim = sim_df.std()
-    se_sim = std_sim / np.sqrt(len(sim_df))
-
-    # Compare with theoretical values
-    for col in sim_df.columns:
-        print(f"Mean Simulated Proportion for {col}: {mean_sim[col]}")
-        print(f"Theoretical Probability for {col}: {theo_df[col].iloc[0]}")
-        print(f"Standard Error for {col}: {se_sim[col]}")
-        print(f"Z-score for {col}: {(mean_sim[col] - theo_df[col].iloc[0])/se_sim[col]}")
-        print()
-
-def count_change_props(starting_seq, final_seq):
-    """ 
-    Input:
-        starting_seq (list): Starting DNA sequence.
-        final_seq (list): Final DNA sequence after one run of simulation.
-
-    Output:
-        changes_proportions (dict): A dictionary of proportions of each possible transition.
-    """
-    changes_counter = Counter(zip(starting_seq, final_seq))
-    changes_proportions = {}
-
-    nucleotide_counts = {'0': 0, '1': 0, '2': 0, '3': 0}
-    nucleotide_counts.update(Counter(starting_seq)) # Update counts based on the starting sequence
-
-    seq_length = len(starting_seq)
-
-    for from_nucleotide in '0123':
-        for to_nucleotide in '0123':
-            key = f"{from_nucleotide}_to_{to_nucleotide}"
-            count = changes_counter[(from_nucleotide, to_nucleotide)]
-            proportion = count / seq_length
-            changes_proportions[key] = proportion
-
-    return changes_proportions
-
-def simulation2(repeat, n, pi, max_time, rate_matrices_dict, markov_order):
-    """ 
-    Simulate sequence for multiple times based on the repeat (int), get the transition probability between each of two nucleotide
-
-    Input:
-        repeat (int): Number of times to repeat the simulation.
-        n (int): Length of DNA sequence.
-        pi (list): List of probabilities for each nucleotide. 
-        max_time (float): Maximum time allowed for DNA substitutions to take place for each repeat.
-        rate_matrices_dict (dict): A dictionary of rate matrices for context-dependent DNA substitution. 
-            The key is a tuple of left and right neighbours as strings from permutations with [0, 1, 2, 3] (=[T, C, A, G]). 
-            The value is the corresponding rate matrix.
-        markov_order (int): Markov order.
-
-    Output:
-        theo_probs_df (dataframe): Dataframe containing all the theoretical propbabilities of each transition.
-        sim_props_df (dataframe): Dataframe containing all the simulated proportions of each transition, each row representing one repeat.
-    """
-
-    rate_mat_Q = rate_matrices_dict['0']
-    trans_mat_P = transition_matrix(rate_mat_Q, max_time)
-    pi_diag = np.diag(pi)
-    joint_mat_J = np.dot(pi_diag, trans_mat_P) 
-    theo_probs_dict = {}
-    for i in range(4):
-        for j in range(4):
-            theo_probs_dict[f'{i}_to_{j}'] = joint_mat_J[i,j]
-
-    simulated_props = {}
-
-    for i in range(repeat):
-        ancestor_seq = generate_ancestor(n, pi) # new ancestor every run
-        simulation_results = simulate_seq(ancestor_seq,max_time,rate_matrices_dict,markov_order)
-        final_seq = simulation_results[0]
-        change_props = count_change_props(ancestor_seq, final_seq)
-        simulated_props[i+1] = change_props
-
-    theo_probs_df = pd.DataFrame([theo_probs_dict])
-    sim_props_df = pd.DataFrame.from_dict(simulated_props, orient='index')
-        
-    return theo_probs_df, sim_props_df
-
-def average_substitution(Q, t, ancestor_sequence, repeats, markov_order):
-    """This one from Puning 
-
-    Parameters
-    ----------
-    Q : _type_
-        _description_
-    t : _type_
-        _description_
-    ancestor_sequence : _type_
-        _description_
-    repeats : _type_
-        _description_
-    markov_order : _type_
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
-    n = len(ancestor_sequence)
-    ns_per_site_list = []
-    ns_total_list = []
-    for i in range(repeats):
-        history = simulate_seq(ancestor_sequence, t, Q, markov_order)[1]
-        ns_total = len(history)-1
-        ns_per_site = ns_total/n
-        ns_per_site_list.append(ns_per_site)
-        ns_total_list.append(ns_total)
-    average_ns_total = np.average(ns_total_list)
-    average_ns_per_site = average_ns_total/n
-
-    return ns_per_site_list, average_ns_per_site
-
-import statistics
-def get_descrip_stat(ns_dict):
-    descrip_stat = {}
-    for key, value in ns_dict.items():
-        average = statistics.mean(value[0])
-        std_dev = statistics.stdev(value[0])
-        cv = (std_dev/average)*100
-        descrip_stat[key] = {'average': average, 'standard_deviation': std_dev, 'coefficient_of_variation': cv}
-
-    
-    return descrip_stat
-
-def join_number_to_base(seq):
-    number_to_base = {'0': 'T', '1': 'C', '2': 'A', '3': 'G'}
-    ances_seq_join_alpha = ''.join(number_to_base[number] for number in seq)
-    return(ances_seq_join_alpha)
 
