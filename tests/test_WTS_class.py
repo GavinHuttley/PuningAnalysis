@@ -3,7 +3,7 @@ sys.path.append('/Users/gulugulu/repos/PuningAnalysis/src')
 import pytest
 import numpy as np
 from numpy.random import default_rng
-from simulation.WTS_class import SeqSimulate, generate_ancestor
+from simulation.wts import SeqSimulate, generate_ancestor
 from simulation.waiting_time_simulator_iid import convert_sequence_to_numeric, join_number_to_base_cogent3
 
 
