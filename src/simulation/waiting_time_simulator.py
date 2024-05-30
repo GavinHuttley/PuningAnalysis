@@ -297,5 +297,23 @@ def simulate_seq(ancestor_seq, max_time, rate_matrices_dict, markov_order):
     else:
         return (history[-2], history[:-1])
     
+def average_substitution(Q, t, repeats, length, pi, markov):
+    """This one from Puning, it calculates the average number of substitution per site during the defined time period of evolution for each repeat. 
+    """
+    
+    n = length
+    ns_per_site_list = []
+    ns_total_list = []
+    for i in range(repeats):
+        ancestor_sequence = generate_ancestor(length, pi)
+        history = simulate_seq(ancestor_sequence, t, Q, markov)[1]
+        ns_total = len(history)-1
+        ns_per_site = ns_total/n
+        ns_per_site_list.append(ns_per_site)
+        ns_total_list.append(ns_total)
+    
+    average_ns_total = np.average(ns_total_list)
+    average_ns_per_site = average_ns_total/n
 
+    return ns_per_site_list, average_ns_per_site
 

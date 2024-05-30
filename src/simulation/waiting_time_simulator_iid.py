@@ -2,31 +2,20 @@ import numpy as np
 import random
 from scipy.linalg import expm
 from cogent3 import make_seq
-from cogent3.util.dict_array import DictArrayTemplate
 
-def join_number_to_base_cogent3(seq):
-    number_to_base = {0: 'T', 1: 'C', 2: 'A', 3: 'G'}
-    ances_seq_join_alpha = ''.join(number_to_base[number] for number in seq)
+# def join_number_to_base_cogent3(seq):
+#     number_to_base = {0: 'T', 1: 'C', 2: 'A', 3: 'G'}
+#     ances_seq_join_alpha = ''.join(number_to_base[number] for number in seq)
 
-    return make_seq(''.join(ances_seq_join_alpha), moltype='dna') 
+#     return make_seq(''.join(ances_seq_join_alpha), moltype='dna') 
 
-def convert_sequence_to_numeric(ancestor_seq):
-    base_to_number = {'T': 0, 'C': 1, 'A': 2, 'G': 3}
-    numeric_seq = [base_to_number[base] for base in str(ancestor_seq)]
-    return np.array(numeric_seq)
+# def convert_sequence_to_numeric(ancestor_seq):
+#     base_to_number = {'T': 0, 'C': 1, 'A': 2, 'G': 3}
+#     numeric_seq = [base_to_number[base] for base in str(ancestor_seq)]
+#     return np.array(numeric_seq)
 
 
 def generate_ancestor(n, pi=None):
-    """
-    Generate an ancestor DNA sequence of length n with customizable probability distribution.
-
-    Input: 
-        n (integer): The desired length of the ancestor DNA sequence.
-        pi (list, optional): List of probabilities for each nucleotide. If None, a random distribution is used.
-
-    Output: 
-        list: The randomly generated DNA sequence of length n in list format.
-    """
     nucleotides = [0, 1, 2, 3]  # T, C, A, G
 
     if pi is None:
@@ -44,16 +33,6 @@ def generate_ancestor(n, pi=None):
         return list(random.choices(nucleotides, weights=pi, k=n))
     
 def generate_rate_matrix():
-    """
-    Generate a single 4 by 4 rate matrix.
-
-    Input: 
-        None
-
-    Output: 
-        rate_matrix (array): A single rate matrix.
-
-    """
     matrix = np.zeros((4, 4))
     for i in range(4):
         row_sum = 0 # sum of non-diagonal elements of current row
@@ -66,39 +45,29 @@ def generate_rate_matrix():
 
     return matrix
 
-def generate_rate_matrix_cogent3() -> DictArrayTemplate: 
-    """
-    Generate a single 4 by 4 rate matrix.
+# def generate_rate_matrix_cogent3() -> DictArrayTemplate: 
+#     """
+#     Generate a single 4 by 4 rate matrix.
 
-    Output: 
-        DictArray: A single rate matrix.
-    """
-    matrix = np.zeros((4, 4))
-    for i in range(4):
-        row_sum = 0  # sum of non-diagonal elements of current row
-        for j in range(4):
-            if i != j:  # fill up non-diagonal elements of current row
-                element = np.random.uniform(0.01, 1.0)  # Non-diagonal elements are between 0.01 and 1.0
-                row_sum += element
-                matrix[i, j] = element
-        matrix[i, i] = -row_sum  # Ensure every row adds up to 0 
+#     Output: 
+#         DictArray: A single rate matrix.
+#     """
+#     matrix = np.zeros((4, 4))
+#     for i in range(4):
+#         row_sum = 0  # sum of non-diagonal elements of current row
+#         for j in range(4):
+#             if i != j:  # fill up non-diagonal elements of current row
+#                 element = np.random.uniform(0.01, 1.0)  # Non-diagonal elements are between 0.01 and 1.0
+#                 row_sum += element
+#                 matrix[i, j] = element
+#         matrix[i, i] = -row_sum  # Ensure every row adds up to 0 
 
-    template = DictArrayTemplate(['T', 'C', 'G', 'A'], ['T', 'C', 'G', 'A'])
-    return template.wrap(matrix)
+#     template = DictArrayTemplate(['T', 'C', 'G', 'A'], ['T', 'C', 'G', 'A'])
+#     return template.wrap(matrix)
 
     
 
 def transition_matrix(Q, t):
-    """
-    Calculate the transition matrix P from rate matrix Q for a given time t.
-
-    Input:
-        Q: Rate matrix (2D array)
-        t: Time passed (float)
-
-    Output:
-        P: Transition matrix (2D array)
-    """
     Qt = np.dot(Q, t)
     P = expm(Qt)
     return P
@@ -123,21 +92,6 @@ def initialize_waiting_times_vectorized(DNA_seq, Q_dict):
     return min_position, min_time
     
 def initialize_waiting_times(DNA_seq, Q_dict):
-    """
-    Input:
-        DNA_seq (list): The DNA sequence as a list.
-        Q_dict (dict): A dictionary of rate matrices for context-dependent DNA substitution. 
-            The key is a tuple of left and right neighbours as strings from permutations with [0, 1, 2, 3] (=[T, C, A, G]). 
-            The value is the corresponding rate matrix.
-        markov_order (int): The Markov order.
-
-    Output: 
-        waiting_times (array): A 2D numpy array with dimensions (length of DNA sequence) x 4. Every row contains the 4 
-            waiting times of 4 possible bases. The current base waiting time is set to inf.
-        min_position (tuple): A tuple containing the index of the base in the DNA sequence with the smallest
-            substitution time and the next base that it will be substituted with. 
-        min_time (float): The minimum time needed for next substitution to take place in the DNA sequence.
-    """
     waiting_times = np.full((len(DNA_seq),4), float('inf'))
     min_time = float('inf')
     min_position = None
@@ -158,57 +112,22 @@ def initialize_waiting_times(DNA_seq, Q_dict):
 
 
 def update_waiting_times(DNA_seq, Q_dict, min_position, min_time):
-    """
-    Input:
-        DNA_seq (list): The DNA sequence as a list.
-        Q_dict (dict): A dictionary of rate matrices for context-dependent DNA substitution. 
-            The key is a tuple of left and right neighbours as strings from permutations with [0, 1, 2, 3] (=[T, C, A, G]). 
-            The value is the corresponding rate matrix.
-        waiting_times (array): A 2D numpy array with dimensions (length of DNA sequence) x 4. Every row contains the 4 
-            waiting times of 4 possible bases. The current base waiting time is set to inf.
-        min_position (tuple): A tuple containing the index of the base in the DNA sequence with the smallest
-            substitution time and the next base that it will be substituted with. 
-        min_time (float): The minimum time needed for next substitution to take place in the DNA sequence.
-        markov_order (int): The Markov order.
-
-    Output:
-        waiting_times (array): A 2D numpy array with dimensions (length of DNA sequence) x 4. Every row contains the 4 
-            waiting times of 4 possible bases. The current base waiting time is set to inf.
-        min_position (tuple): A tuple containing the index of the base in the DNA sequence with the smallest
-            substitution time and the next base that it will be substituted with. 
-        min_time (float): The minimum time needed for next substitution to take place in the DNA sequence.
-    """
-
     seq_index, new_base = min_position
     
     DNA_seq[seq_index] = new_base # Substitue with new base in DNA sequence 
 
     # Regenerate all waiting times
-    min_position, min_time = initialize_waiting_times_vectorized(DNA_seq, Q_dict)
+    min_position, min_time = initialize_waiting_times(DNA_seq, Q_dict)
 
     return min_position, min_time
 
 def simulate_seq(max_time, rate_matrix, ancestor_seq = None):
-    """
-    Input:
-        ancestor_seq (list): The initial non-substituted generated DNA sequence of length n.
-        max_time (float): The maximum time allowed for substitution(s) to take place in the simulation.
-        rate_matrices (dict): A dictionary of rate matrices for context-dependent DNA substitution. 
-            The key is a tuple of left and right neighbours as strings from permutations with [0, 1, 2, 3] (=[T, C, A, G]). 
-            The value is the corresponding rate matrix.
-        markov_order (int): The Markov order.
-
-    Output:
-        tuple: A tuple containing the final DNA sequence at the end of the simulation as well as an array
-        containing the history of substituted DNA sequences throughout the simulation.
-        
-    """
     history = [ancestor_seq.copy(),]
 
     time_passed = 0
 
     DNA_seq = ancestor_seq.copy()
-    min_position, min_time = initialize_waiting_times_vectorized(DNA_seq, rate_matrix)
+    min_position, min_time = initialize_waiting_times(DNA_seq, rate_matrix)
 
     while time_passed + min_time <= max_time:
         time_passed += min_time
@@ -275,7 +194,8 @@ def get_histograms2(ns_dict, theoretical_ns_list):
                         size=(x_max - x_min) / 20  # Adjust size for consistent bar width
                     ),
                     marker=dict(line=dict(width=1)),
-                    name=f'Length {length}, Time {time}'
+                    name=f'Length {length}, Time {time}',
+                    histnorm='probability'
                 ),
                 row=row,
                 col=col
@@ -292,10 +212,6 @@ def get_histograms2(ns_dict, theoretical_ns_list):
         showlegend=False,
         bargap=0.05  # Adjust space between bars
     )
-    
-    # Set consistent x-axis range across all subplots
-    for r in range(1, rows+1):
-        for c in range(1, cols+1):
-            fig.update_xaxes(range=[-0.09, 0.06], row=r, col=c)
+
 
     return fig

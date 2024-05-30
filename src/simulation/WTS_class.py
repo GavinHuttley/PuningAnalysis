@@ -36,6 +36,7 @@ def join_number_to_base_cogent3(seq):
 
     return make_seq(''.join(ances_seq_join_alpha), moltype='dna') 
 
+
 def convert_sequence_history_to_cogent3_sequence_colletion(history):
     seq_names = []
     for i in range(len(history)):
@@ -50,6 +51,11 @@ def convert_sequence_history_to_cogent3_sequence_colletion(history):
     data = zip(seq_names, seq_base)
     seqs = make_unaligned_seqs(data, 'dna')
     return seqs
+
+
+def generate_ancestor(length, pi, rng):
+    nucleotides = [0, 1, 2, 3]  # T, C, A, G
+    return list(rng.choice(nucleotides, size=length, p=pi))
 
 class SeqSimulate:
     def __init__(self, Q: np.array, length: int, num_repeat: int, seed: int, pi: list = None):
@@ -66,16 +72,12 @@ class SeqSimulate:
         results = []
         for i in range(self.num_repeat):
             rng = self.rngs[i]
-            ancestor_sequence = self.generate_ancestor(rng)
+            ancestor_sequence = generate_ancestor(self.length, self.pi, rng)
             simulation_result = self.simulate_seq(ancestor_sequence, max_time, rng)
 
             results.append(simulation_result)
         return results
 
-
-    def generate_ancestor(self, rng):
-        nucleotides = [0, 1, 2, 3]  # T, C, A, G
-        return list(rng.choice(nucleotides, size=self.length, p=self.pi))
 
     def initialize_waiting_times_vectorized(self, DNA_seq, rng):
         n_bases = len(DNA_seq)
