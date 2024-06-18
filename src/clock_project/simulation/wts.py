@@ -1,8 +1,15 @@
 import numpy as np
 from cogent3 import make_seq
 from numpy.random import SeedSequence, default_rng
-from cogent3 import make_unaligned_seqs
+from cogent3 import make_unaligned_seqs, make_aligned_seqs
 from cogent3 import Sequence
+from cogent3 import make_seq
+
+def join_number_to_base_cogent3(seq):
+    number_to_base = {0: 'T', 1: 'C', 2: 'A', 3: 'G'}
+    ances_seq_join_alpha = ''.join(number_to_base[number] for number in seq)
+
+    return make_seq(''.join(ances_seq_join_alpha), moltype='dna') 
 
 
 def transform_Q_to_array(Q_dict):
@@ -30,12 +37,6 @@ def convert_sequence_to_numeric(seq: Sequence):
     numeric_seq = [base_to_number[base] for base in str(seq)]
     return np.array(numeric_seq)
 
-def join_number_to_base_cogent3(seq):
-    number_to_base = {0: 'T', 1: 'C', 2: 'G', 3: 'A'}
-    ances_seq_join_alpha = ''.join(number_to_base[number] for number in seq)
-
-    return make_seq(''.join(ances_seq_join_alpha), moltype='dna') 
-
 
 def convert_sequence_history_to_cogent3_sequence_colletion(history):
     seq_names = []
@@ -53,12 +54,28 @@ def convert_sequence_history_to_cogent3_sequence_colletion(history):
     return seqs
 
 
-def generate_ancestor(length, pi, rng):
+def generate_ancestor(length, pi, rng=None):
     nucleotides = [0, 1, 2, 3]  # T, C, A, G
+    if rng == None:
+        rng = default_rng()
     return list(rng.choice(nucleotides, size=length, p=pi))
 
+def generate_rate_matrix():
+    matrix = np.zeros((4, 4))
+    for i in range(4):
+        row_sum = 0 # sum of non-diagonal elements of current row
+        for j in range(4):
+            if i != j: # fill up non-diagonal elements of current row
+                element = np.random.uniform(0.01, 1.0)  # Non-diagonal elements are between 0.01 and 1.0
+                row_sum += element
+                matrix[i, j] = element
+        matrix[i,i] = -row_sum # Ensure every row adds up to 0 
+
+    rate_matrix = matrix.tolist()
+    return np.array(rate_matrix)
+
 class SeqSimulate:
-    def __init__(self, Q: np.array, length: int, num_repeat: int, seed: int, pi: list = None):
+    def __init__(self, Q: np.array, length: int, num_repeat: int, seed: int, pi: list = None, ancestor: list = None):
         self.Q = Q
         self.length = length
         self.num_repeat = num_repeat
@@ -67,12 +84,16 @@ class SeqSimulate:
         self.ss = SeedSequence(self.seed)
         self.child_seeds = self.ss.spawn(self.num_repeat)
         self.rngs = [default_rng(s) for s in self.child_seeds]
+        self.ancestor = ancestor
     
     def main(self, max_time):
         results = []
         for i in range(self.num_repeat):
             rng = self.rngs[i]
-            ancestor_sequence = generate_ancestor(self.length, self.pi, rng)
+            if self.ancestor == None:
+                ancestor_sequence = generate_ancestor(self.length, self.pi, rng)
+            else:
+                ancestor_sequence = self.ancestor
             simulation_result = self.simulate_seq(ancestor_sequence, max_time, rng)
 
             results.append(simulation_result)
@@ -229,3 +250,28 @@ def get_histograms2(ns_dict, theoretical_ns_list):
 
 # cogent3_seqs = convert_sequence_history_to_cogent3_sequence_colletion(result)
 
+def taxanomic_triple_simulation(p0, outgoup_Q1, ingroup_Q2, ingroup_Q3, t1, t2, length, num_repeat, seed):
+    ancestor_seq = generate_ancestor(length, p0)
+    simulator1 = SeqSimulate(outgoup_Q1, length, num_repeat, seed, p0, ancestor_seq)
+    seqs_inter_node = simulator1.main(max_time=t1)[0]
+    ENS_internal = (len(seqs_inter_node)-1)/length
+    seq_inter_node = seqs_inter_node[-1]
+    seqs_edge_3 = simulator1.main(max_time=t2)[0]
+    seq_edge_3 = seqs_edge_3[-1]
+    ENS3 = (len(seqs_edge_3)-1)/length
+    simulator2 = SeqSimulate(ingroup_Q2, length, num_repeat, seed, p0, seq_inter_node)
+    simulator3 = SeqSimulate(ingroup_Q3, length, num_repeat, seed, p0, seq_inter_node)
+    internal_t = t2-t1
+    seqs_edge_1 = simulator2.main(max_time=internal_t)[0]
+    seqs_edge_2 = simulator3.main(max_time=internal_t)[0]
+    ENS1 = (len(seqs_edge_1)-1)/length
+    ENS2 = (len(seqs_edge_2)-1)/length
+    seq_edge_1 = seqs_edge_1[-1]
+    seq_edge_2 = seqs_edge_2[-1]
+    seqs_num = [seq_edge_1, seq_edge_2, seq_edge_3]
+    seqs_base = [join_number_to_base_cogent3(seq) for seq in seqs_num]
+    name = ['ingroup_edge1', 'ingroup_edge2', 'outgroup_edge3']
+    data = zip(name, seqs_base)
+    seqs  = make_aligned_seqs(data, 'dna')
+    ENSs = [ENS_internal, ENS1, ENS2, ENS3]
+    return seqs, ENSs
