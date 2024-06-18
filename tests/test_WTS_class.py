@@ -3,8 +3,7 @@ sys.path.append('/Users/gulugulu/repos/PuningAnalysis/src')
 import pytest
 import numpy as np
 from numpy.random import default_rng
-from simulation.wts import SeqSimulate, generate_ancestor
-from simulation.waiting_time_simulator_iid import convert_sequence_to_numeric, join_number_to_base_cogent3
+from clock_project.simulation.wts import SeqSimulate, generate_ancestor
 
 
 @pytest.fixture
@@ -68,8 +67,8 @@ def test_single_substitution_difference(setup_simulation, max_time):
 
 
 @pytest.mark.parametrize("expected_count", [2500])
-def test_generate_ancestor_nucleotide_distribution(equal_frequency, sequence_length, rng, expected_count):
-    seq = generate_ancestor(sequence_length, equal_frequency, rng)
+def test_generate_ancestor_nucleotide_distribution(equal_frequency, sequence_length, expected_count):
+    seq = generate_ancestor(sequence_length, equal_frequency)
     counts = np.bincount(seq, minlength=4)
     print("Generated sequence counts:", counts)  # Debug output
     assert all(abs(count - expected_count) <= 0.05 * expected_count for count in counts)
