@@ -1,9 +1,10 @@
 import numpy as np
-from cogent3 import make_seq
+from cogent3 import make_seq, get_app
 from numpy.random import SeedSequence, default_rng
 from cogent3 import make_unaligned_seqs, make_aligned_seqs
 from cogent3 import Sequence
 from cogent3 import make_seq
+from clock_project.simulation.magnitude_quantification import calculate_non_stationarity
 
 def join_number_to_base_cogent3(seq):
     number_to_base = {0: 'T', 1: 'C', 2: 'A', 3: 'G'}
@@ -273,5 +274,52 @@ def taxanomic_triple_simulation(p0, outgoup_Q1, ingroup_Q2, ingroup_Q3, t1, t2, 
     name = ['ingroup_edge1', 'ingroup_edge2', 'outgroup_edge3']
     data = zip(name, seqs_base)
     seqs  = make_aligned_seqs(data, 'dna')
-    ENSs = [ENS_internal, ENS1, ENS2, ENS3]
+    ENSs = {'internal_edge': ENS_internal, 'ingroup_edge1':ENS1,'ingroup_edge2': ENS2, 'outgroup_edge':ENS3}
     return seqs, ENSs
+
+dist_cal = get_app("fast_slow_dist", fast_calc="tn93", moltype="dna")
+est_tree = get_app("quick_tree", drop_invalid=False)
+tree_func = dist_cal + est_tree
+model = get_app("model", "GN", tree_func=tree_func, time_het="max")
+
+def two_seq_simulation(t, Q1, Q2, Q3, p0, length, num_repeat, seed):
+    ancestor_seq = generate_ancestor(length, p0)
+    simulator1 = SeqSimulate(Q1, length, num_repeat, seed, p0, ancestor_seq)
+    simulator2 = SeqSimulate(Q2, length, num_repeat, seed, p0, ancestor_seq)
+    simulator3 = SeqSimulate(Q3, length, num_repeat, seed, p0, ancestor_seq)
+    seqs_edge_1 = simulator1.main(max_time=t)[0]
+    seqs_edge_2 = simulator2.main(max_time=t)[0]
+    seqs_edge_3 = simulator3.main(max_time=t)[0]
+    seq_edge_1 = seqs_edge_1[-1]
+    seq_edge_2 = seqs_edge_2[-1]
+    seq_edge_3 = seqs_edge_3[-1]
+    seqs_num = [seq_edge_1, seq_edge_2, seq_edge_3]
+    seqs_base = [join_number_to_base_cogent3(seq) for seq in seqs_num]
+    name = ['ingroup_edge1', 'ingroup_edge2', 'outgroup_edge3']
+    data = zip(name, seqs_base)
+    aln  = make_aligned_seqs(data, 'dna')
+    res = model(aln)
+    return aln, res
+
+def get_nabla_ENS(result):
+    edge_names = result.tree.get_node_names(includeself = False)
+    matrices = {n:result.lf.get_rate_matrix_for_edge(n, calibrated = True) for n in edge_names}
+    initial_distribution = result.lf.get_motif_probs()
+    branch_length = result.lf.get_lengths_as_ens()
+    ens_dict = {}
+    nabla = {}
+    for edge_name in edge_names:
+        ens_dict[edge_name] = branch_length[edge_name]
+    for edge_name in edge_names:
+        matrix = matrices[edge_name]
+        ens = ens_dict[edge_name]
+        nabla[edge_name] = calculate_non_stationarity(initial_distribution, matrix, ens)
+    return matrices, initial_distribution, ens_dict, nabla
+
+
+
+
+
+
+
+
