@@ -42,7 +42,7 @@ def process_alignment_and_save(path, output_dir1, output_dir2):
 
         with open (output_path_sequence, 'w') as outfile2:
             json.dump(renamed_seqs.to_json(), outfile2)
-        print(f"Alignment saved to {output_path_sequence}")
+        print(f"Sequence saved to {output_path_sequence}")
 
     except Exception as e:
         print(f"Failed to process {path}: {e}")

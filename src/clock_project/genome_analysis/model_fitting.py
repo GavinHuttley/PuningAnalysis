@@ -23,7 +23,7 @@ def get_just3rd_aligned_no_degenerates(path):
 dist_cal = get_app("fast_slow_dist", fast_calc="tn93", moltype="dna")
 est_tree = get_app("quick_tree", drop_invalid=True)
 tree_func = dist_cal + est_tree
-model = get_app("model", "TN93", tree_func=tree_func, time_het="max")
+model = get_app("model", "GN", tree_func=tree_func, time_het="max")
 
 def fit_model_for_path(path):
     just3rd_aligned_no_degenerates = get_just3rd_aligned_no_degenerates(path)

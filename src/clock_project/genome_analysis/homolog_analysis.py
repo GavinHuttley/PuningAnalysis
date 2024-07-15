@@ -149,7 +149,10 @@ def get_matching_score_to_human(seqs):
 from cogent3.app.composable import define_app
 from cogent3.app.typing import UnalignedSeqsType, SeqsCollectionType	
 import numpy as np
-from cogent3.app.composable import NotCompleted  # Import the NotCompleted class
+
+loader = get_app("load_unaligned", format="fasta", moltype="dna")
+codon_aligner = get_app("progressive_align", "codon", unique_guides=True)
+cpos3 = get_app("take_codon_positions", 3)
 
 @define_app
 def too_many_ambigs(seqs: UnalignedSeqsType, frac=0.1) -> UnalignedSeqsType:
@@ -206,15 +209,12 @@ def remove_redundent_seq(seqs: UnalignedSeqsType) -> UnalignedSeqsType:
     valid_seqs = seqs.take_seqs(seq_names_keep)
     return valid_seqs
 
-loader = get_app("load_unaligned", format="fasta", moltype="dna")
-codon_aligner = get_app("progressive_align", "codon", unique_guides=True)
-cpos3 = get_app("take_codon_positions", 3)
+
 drop_low_matching = low_matching_significance(quantile=0.1)
 drop_ambiguous = too_many_ambigs(frac=0.2)
 drop_invalid_length = length_divisible_by_three()
 drop_short_seq = short_seq(length=600)
 seq_without_redundent = remove_redundent_seq()
-
 filter = drop_short_seq + drop_invalid_length + drop_low_matching + drop_ambiguous + seq_without_redundent
 
 def remove_redundent_align(path):
