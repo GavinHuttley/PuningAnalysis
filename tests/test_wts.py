@@ -1,5 +1,3 @@
-import sys
-sys.path.append('/Users/gulugulu/repos/PuningAnalysis/src')
 import pytest
 import numpy as np
 from numpy.random import default_rng
