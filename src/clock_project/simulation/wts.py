@@ -67,7 +67,7 @@ def generate_rate_matrix():
         row_sum = 0 # sum of non-diagonal elements of current row
         for j in range(4):
             if i != j: # fill up non-diagonal elements of current row
-                element = np.random.uniform(0.01, 1.0)  # Non-diagonal elements are between 0.01 and 1.0
+                element = np.random.uniform(10e-6, 1.0)  # Non-diagonal elements are between 0.01 and 1.0
                 row_sum += element
                 matrix[i, j] = element
         matrix[i,i] = -row_sum # Ensure every row adds up to 0 
