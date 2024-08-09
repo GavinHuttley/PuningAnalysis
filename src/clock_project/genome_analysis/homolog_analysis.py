@@ -78,7 +78,7 @@ def jsd_genetic_distance_scatters(dataframes_dict):
         
         fig.add_trace(
             go.Scatter(
-                x=np.log(df['JSD Value']),
+                x=np.log10(df['JSD Value']),
                 y=df['Distance Value'],
                 mode='markers'
             ),
@@ -87,11 +87,11 @@ def jsd_genetic_distance_scatters(dataframes_dict):
         )
         # Only add x-axis title to bottom row plots
 
-        fig.update_xaxes(row=row, col=col, range=[-12, -2])
-        fig.update_yaxes(row=row, col=col, range =[0, 1])
+        fig.update_xaxes(row=row, col=col, range =[-6, 0])
+        fig.update_yaxes(row=row, col=col, range =[0, 1.1])
 
         if row == rows:
-            fig.update_xaxes(title_text="Log(JSD Value)", row=row, col=col, range=[-12, -2])
+            fig.update_xaxes(title_text="Log(JSD Value)", row=row, col=col, range=[-6, 0])
         
         # Only add y-axis title to first column plots
         if col == 1:
@@ -155,14 +155,14 @@ codon_aligner = get_app("progressive_align", "codon", unique_guides=True)
 cpos3 = get_app("take_codon_positions", 3)
 
 @define_app
-def too_many_ambigs(seqs: UnalignedSeqsType, frac=0.1) -> UnalignedSeqsType:
+def too_many_ambigs(seqs: UnalignedSeqsType, frac=0.05) -> UnalignedSeqsType:
     w_ambig = seqs.get_lengths(include_ambiguity=True)
     wo_ambig = seqs.get_lengths(include_ambiguity=False)
     keep = {name for name in wo_ambig.keys() if wo_ambig[name] / w_ambig[name] >= 1 - frac}
     return seqs.take_seqs(keep)
 
 @define_app
-def low_matching_significance(seqs: UnalignedSeqsType, quantile=0.05) -> UnalignedSeqsType:
+def low_matching_significance(seqs: UnalignedSeqsType, quantile=0.1) -> UnalignedSeqsType:
     ref_name = seqs.names[-1]
     ref = seqs.get_seq(seqs.names[-1])
 
@@ -260,7 +260,7 @@ def replace_common_species_names(alignment: SeqsCollectionType
         # Check if the species part exists in the name mapping
         if species_info in name_map:
             # Create a new name using the common name and the gene info
-            new_name = f"{name_map[species_info]}-{gene_info}"
+            new_name = name_map[species_info]
             new_names[name] = new_name
         else:
             # If no mapping exists, keep the original name
@@ -270,3 +270,4 @@ def replace_common_species_names(alignment: SeqsCollectionType
     return alignment.rename_seqs(lambda x: new_names[x])
 
 common_name_renamer = replace_common_species_names()
+
