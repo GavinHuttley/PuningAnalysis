@@ -5,6 +5,7 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "clock_project"
 authors = [{name = "puning", email = "wangpuning28@gmail.com"}]
+dependencies = ["click", "mpi4py"]
 readme = "README.md"
 dynamic = ["version", "description"]
 
