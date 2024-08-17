@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import json
 from cogent3.util.deserialise import deserialise_object
-from clock_project.genome_analysis.traids_selection import extract_species_names, extract_taxonomic_order_info, get
+from clock_project.replaced.traids_selection import extract_species_names, extract_taxonomic_order_info, get
 
 from clock_project.replaced.triads_selection_jsd import (
     pseudorandom_ingroup_selection_between_order_jsd, 

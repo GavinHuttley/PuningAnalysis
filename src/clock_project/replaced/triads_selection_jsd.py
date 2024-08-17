@@ -7,7 +7,7 @@ from cogent3.util.deserialise import deserialise_object
 from cogent3.maths.measure import jsd
 from multiprocessing import Pool
 
-from clock_project.genome_analysis.traids_selection import (
+from clock_project.replaced.traids_selection import (
     extract_taxonomic_order_info, 
     extract_species_names, 
     get_triads_info, 
