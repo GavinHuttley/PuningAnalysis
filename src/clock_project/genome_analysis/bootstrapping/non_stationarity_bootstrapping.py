@@ -1,10 +1,21 @@
+import json
 from cogent3 import get_app, open_data_store
 from cogent3.evolve.models import register_model
 from cogent3.evolve.ns_substitution_model import GeneralStationary
 from cogent3 import make_tree, get_moltype
-from cogent3.app.composable import define_app
-from cogent3.app.typing import AlignedSeqsType, SerialisableType
+from cogent3.app.composable import LOADER, define_app, WRITER
+from cogent3.app.typing import AlignedSeqsType, BootstrapResultType, SerialisableType, IdentifierType
+import click
+import multiprocessing
+
+
+
+
 from cogent3.app import evo
+RATE_PARAM_UPPER = 50
+
+def get_id(result):
+    return result.source.unique_id
 
 @register_model("nucleotide")
 def GSN(**kwargs):
@@ -21,11 +32,10 @@ def get_param_rules_upper_limit(model_name, upper):
     return [{"par_name": par_name, "upper": upper} for par_name in sm.get_param_list()]
 
 
-RATE_PARAM_UPPER = 50
-
 @define_app
 def test_hypothesis_model_bootstrapper(aln: AlignedSeqsType, tree=None, opt_args=None) -> SerialisableType:
     outgroup_name = aln.info['triads_species_name']['outgroup']
+    print(outgroup_name)
     tree = make_tree(tip_names=aln.names)
     
     outgroup_edge = [outgroup_name]
@@ -49,22 +59,67 @@ def test_hypothesis_model_bootstrapper(aln: AlignedSeqsType, tree=None, opt_args
         )
     
     hyp = evo.hypothesis(null, alt, sequential=True)
-    bootstrapper = evo.bootstrap(hyp, num_reps=1, parallel=True)
+    bootstrapper = evo.bootstrap(hyp, num_reps=100, parallel=True)
     result = bootstrapper(aln)    
+    print('finish')
     return result
+
+load_json_app = get_app("load_json")
+
+
+@define_app
+def customised_load_json(DataMember: IdentifierType) -> AlignedSeqsType:
+    aln = load_json_app(DataMember)
+    aln.source = DataMember.unique_id
+    return aln
+
+load_json_customised = customised_load_json()
+
+
+# @define_app(app_type=WRITER)
+# def customised_write_json(bootstrap_result_serilised: SerialisableType, unique_id: IdentifierType):
+#     path_to_dir = '/Users/gulugulu/Desktop/honours/data_local/'
+#     out_dstore = open_data_store(path_to_dir, mode="w", suffix="json")
+#     write_json_app = get_app("write_json", data_store=out_dstore, identifier = unique_id)
+#     return write_json_app
+
 
 def p_value(result):
     return sum(result.observed.LR <= null_lr for null_lr in result.null_dist) / len(result.null_dist)
 
 
+@click.command()
+@click.option("-n", "--num", type=str, default=None, help="number of CPU")
+def main(num):
+    aln_dir_new = '/Users/gulugulu/Desktop/honours/data_local/triples_aln_subset_info_added_to_run'
 
-bootstrapper = test_hypothesis_model_bootstrapper()
+    path_to_dir = '/Users/gulugulu/Desktop/honours/data_local/bootstrapping_test_non'
+    out_dstore = open_data_store(path_to_dir, mode="w", suffix="json")
+    write_json_app = get_app("write_json", data_store=out_dstore, id_from_source = get_id)
 
+    input_data_store = open_data_store(aln_dir_new, suffix= 'json')
 
-# aln_dir_new = '/Users/gulugulu/Desktop/honours/data_local/triples_aln_subset_info_added'
+    bootstrapper = test_hypothesis_model_bootstrapper()
 
-# input_data_store = open_data_store(aln_dir_new, suffix= 'json')
-# bootstrap_results = list(path_bootstrapper.as_completed(input_data_store))
+    bootstrap_process = load_json_app + bootstrapper + write_json_app
+
+    print('App begun')
+            
+    bootstrap_process.apply_to(
+        input_data_store,
+        parallel=True,
+        par_kw=dict(
+            max_workers=10, use_mpi= False
+        ),
+    )
+
+    bootstrap_process.disconnect()
+
+    print('App end')
+
+if __name__ == "__main__":
+    main()
+
 
 
 

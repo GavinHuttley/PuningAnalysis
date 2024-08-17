@@ -1,5 +1,9 @@
 *.pdf
 *.json
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7342877d1a221f342f6f92ab3ce35df5b85c1df2
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
