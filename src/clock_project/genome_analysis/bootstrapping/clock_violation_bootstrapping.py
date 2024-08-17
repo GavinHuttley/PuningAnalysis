@@ -1,12 +1,23 @@
+import json
 from cogent3 import get_app, open_data_store
 from cogent3.evolve.models import register_model
 from cogent3.evolve.ns_substitution_model import GeneralStationary
 from cogent3 import make_tree, get_moltype
-from cogent3.app.composable import define_app
-from cogent3.app.typing import AlignedSeqsType, HypothesisResultType, BootstrapResultType, IdentifierType
+from cogent3.app.composable import LOADER, define_app, WRITER
+from cogent3.app.typing import AlignedSeqsType, BootstrapResultType, SerialisableType, IdentifierType
+import click
 from cogent3.app import evo
-import json
+RATE_PARAM_UPPER = 50
 
+def get_id(result):
+    return result.source.unique_id
+
+@register_model("nucleotide")
+def GSN(**kwargs):
+    """A General Stationary Nucleotide substitution model instance."""
+    kwargs["optimise_motif_probs"] = kwargs.get("optimise_motif_probs", True)
+    kwargs["name"] = kwargs.get("name", "GSN")
+    return GeneralStationary(get_moltype("dna").alphabet, **kwargs)
 
 def get_param_rules_upper_limit(model_name, upper):
     """rules to set the upper value for rate matrix terms"""
@@ -15,79 +26,76 @@ def get_param_rules_upper_limit(model_name, upper):
     sm = get_model(model_name)
     return [{"par_name": par_name, "upper": upper} for par_name in sm.get_param_list()]
 
-RATE_PARAM_UPPER = 50
 
 @define_app
-def test_hypothesis_model(aln_path: IdentifierType, result_lf_path, tree=None, opt_args=None) -> HypothesisResultType:
-    aln = json.load(open(aln_path, 'r'))
-    result_lf = load_json_app(result_lf_path)
+def test_hypothesis_clock_model_N(aln_path: IdentifierType, tree=None, opt_args=None) -> HypothesisResultType:
+    aln = load_json_app(aln_path)
+    outgroup_name = aln.info['triads_species_name']['outgroup']
+    outgroup_edge = [outgroup_name]
 
-    tree = result_lf.tree
+    tree = make_tree(tip_names=aln.names)
 
     model_kwargs = dict(
     tree=tree,
     opt_args=opt_args,
     # unique_trees=True,
+    lf_args=dict(discrete_edges=[outgroup_edge]),
     optimise_motif_probs=True,
     )
     null = evo.model(
             "GN",
-            param_rules=get_param_rules_upper_limit("GSN", RATE_PARAM_UPPER),
+            param_rules=get_param_rules_upper_limit("GN", RATE_PARAM_UPPER),
+            time_het = None,
             **model_kwargs,
         )
     alt = evo.model(
             "GN",
+            name="GN-max-het",
             param_rules=get_param_rules_upper_limit("GN", RATE_PARAM_UPPER),
-            time_het = 'max',
+            time_het = "max",
             **model_kwargs,
         )
     
     hyp = evo.hypothesis(null, alt, sequential=True)
-    result = hyp(aln)
-
-    return result.to_json()
-
-
+    bootstrapper = evo.bootstrap(hyp, num_reps=100, parallel=True)
+    result = bootstrapper(aln)    
+    print('finish')
+    return result
 
 load_json_app = get_app("load_json")
 
-result_lf_dir = '/Users/gulugulu/repos/PuningAnalysis/results/output_data/model_fitting_result_350_threshold'
+def p_value(result):
+    return sum(result.observed.LR <= null_lr for null_lr in result.null_dist) / len(result.null_dist)
 
-aln_dir = '/Users/gulugulu/repos/PuningAnalysis/data/ensembl_ortholog_sequences/homologies_alignment_common_name_350_threshold'
 
-aln_paths = open_data_store(aln_dir, suffix='json')
-
-result_lf_path = open_data_store(result_lf_dir, suffix='json')
-
-output_path = '/Users/gulugulu/repos/PuningAnalysis/results/output_data/clock_violation_test_result.json'
-
-import click
-import multiprocessing
-import glob
-import os
 @click.command()
-@click.argument('aln_dir', type=click.Path(exists=True))
-@click.option('--result_lf_dir', '-rd', help='Path to the directory containing model fitting result')
-@click.option('--num_processes', '-n', default=multiprocessing.cpu_count(), type=int, help='Number of processes to use (default: number of CPUs)')
-@click.option('--output_path', '-o', type=click.Path(), help='Output directory')
+@click.option("-n", "--num", type=str, default=None, help="number of CPU")
+def main(num):
+    aln_dir_new = '/Users/gulugulu/Desktop/honours/data_local/triples_aln_subset_info_added'
 
-def main(aln_dir, result_lf_dir, num_processes, output_path):
-    """Fit model for sequences in different paths and aggregate the results into a single JSON file."""
-    result_dir = {}
-    paths = glob.glob(os.path.join(aln_dir, '*.json'))  # corrected to match .json files
+    path_to_dir = '/Users/gulugulu/Desktop/honours/data_local/bootstrapping_test_non'
+    out_dstore = open_data_store(path_to_dir, mode="w", suffix="json")
+    write_json_app = get_app("write_json", data_store=out_dstore, id_from_source = get_id)
 
-    with multiprocessing.Pool(processes=num_processes) as pool:
-        for path in paths:
-            gene_name = os.path.basename(path).rsplit('.', 1)[0]
-            result_lf_path = os.path.join(result_lf_dir, gene_name + ".json")
-            result = pool.apply_async(test_hypothesis_model, (path, result_lf_path))
-            result_dir[gene_name] = result.get()  # Get the result from the async call
+    input_data_store = open_data_store(aln_dir_new, suffix= 'json')
 
-    # Write the aggregated results to a JSON file
-    with open(output_path, 'w') as outfile:
-        json.dump(result_dir, outfile, indent=4)
-    
-    print(f"Results saved to {output_path}")
+    bootstrapper = test_hypothesis_clock_model_N()
 
-if __name__ == '__main__':
+    bootstrap_process = load_json_app + bootstrapper + write_json_app
+
+    print('App begun')
+            
+    bootstrap_process.apply_to(
+        input_data_store,
+        parallel=True,
+        par_kw=dict(
+            max_workers=10, use_mpi= False
+        ),
+    )
+
+    bootstrap_process.disconnect()
+
+    print('App end')
+
+if __name__ == "__main__":
     main()
