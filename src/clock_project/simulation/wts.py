@@ -251,17 +251,22 @@ def get_histograms2(ns_dict, theoretical_ns_list):
 
 # cogent3_seqs = convert_sequence_history_to_cogent3_sequence_colletion(result)
 
-def taxanomic_triple_simulation(p0, outgoup_Q1, ingroup_Q2, ingroup_Q3, t1, t2, length, num_repeat, seed):
-    ancestor_seq = generate_ancestor(length, p0)
-    simulator1 = SeqSimulate(outgoup_Q1, length, num_repeat, seed, p0, ancestor_seq)
+def taxonomic_triple_simulation(p0, ingoup_Q1, ingroup_Q2, outgroup_Q3, t1, t2, length, num_repeat, seed, ances_seq = None):
+    if ances_seq == None:
+        length = len
+        ancestor_seq = generate_ancestor(len, p0)
+    else:
+        ancestor_seq = ances_seq
+        length = len(ancestor_seq)
+    simulator1 = SeqSimulate(outgroup_Q3, length, num_repeat, seed, p0, ancestor_seq)
     seqs_inter_node = simulator1.main(max_time=t1)[0]
     ENS_internal = (len(seqs_inter_node)-1)/length
     seq_inter_node = seqs_inter_node[-1]
     seqs_edge_3 = simulator1.main(max_time=t2)[0]
     seq_edge_3 = seqs_edge_3[-1]
     ENS3 = (len(seqs_edge_3)-1)/length
-    simulator2 = SeqSimulate(ingroup_Q2, length, num_repeat, seed, p0, seq_inter_node)
-    simulator3 = SeqSimulate(ingroup_Q3, length, num_repeat, seed, p0, seq_inter_node)
+    simulator2 = SeqSimulate(ingoup_Q1, length, num_repeat, seed, p0, seq_inter_node)
+    simulator3 = SeqSimulate(ingroup_Q2, length, num_repeat, seed, p0, seq_inter_node)
     internal_t = t2-t1
     seqs_edge_1 = simulator2.main(max_time=internal_t)[0]
     seqs_edge_2 = simulator3.main(max_time=internal_t)[0]
@@ -273,23 +278,31 @@ def taxanomic_triple_simulation(p0, outgoup_Q1, ingroup_Q2, ingroup_Q3, t1, t2, 
     seqs_base = [join_number_to_base_cogent3(seq) for seq in seqs_num]
     name = ['ingroup_edge1', 'ingroup_edge2', 'outgroup_edge3']
     data = zip(name, seqs_base)
-    seqs  = make_aligned_seqs(data, 'dna')
+    aln  = make_aligned_seqs(data, 'dna')
     ENSs = {'internal_edge': ENS_internal, 'ingroup_edge1':ENS1,'ingroup_edge2': ENS2, 'outgroup_edge':ENS3}
-    return seqs, ENSs
+    return aln, ENSs
 
 dist_cal = get_app("fast_slow_dist", fast_calc="tn93", moltype="dna")
 est_tree = get_app("quick_tree", drop_invalid=False)
 tree_func = dist_cal + est_tree
 model = get_app("model", "GN", tree_func=tree_func, time_het="max")
 
-def two_seq_simulation(t, Q1, Q2, Q3, p0, length, num_repeat, seed):
-    ancestor_seq = generate_ancestor(length, p0)
+def three_seq_simulation_star_shape(t, Q1, Q2, Q3, p0, length, num_repeat, seed, ancestor_seq = None):
+    if ancestor_seq == None:
+        length = len
+        ancestor_seq = generate_ancestor(len, p0)
+    else:
+        ancestor_seq = ancestor_seq
+        length = len(ancestor_seq)
     simulator1 = SeqSimulate(Q1, length, num_repeat, seed, p0, ancestor_seq)
     simulator2 = SeqSimulate(Q2, length, num_repeat, seed, p0, ancestor_seq)
     simulator3 = SeqSimulate(Q3, length, num_repeat, seed, p0, ancestor_seq)
     seqs_edge_1 = simulator1.main(max_time=t)[0]
+    ENS1 = (len(seqs_edge_1)-1)/length
     seqs_edge_2 = simulator2.main(max_time=t)[0]
+    ENS2 = (len(seqs_edge_2)-1)/length
     seqs_edge_3 = simulator3.main(max_time=t)[0]
+    ENS3 = (len(seqs_edge_3)-1)/length
     seq_edge_1 = seqs_edge_1[-1]
     seq_edge_2 = seqs_edge_2[-1]
     seq_edge_3 = seqs_edge_3[-1]
@@ -298,8 +311,8 @@ def two_seq_simulation(t, Q1, Q2, Q3, p0, length, num_repeat, seed):
     name = ['ingroup_edge1', 'ingroup_edge2', 'outgroup_edge3']
     data = zip(name, seqs_base)
     aln  = make_aligned_seqs(data, 'dna')
-    res = model(aln)
-    return aln, res
+    ENSs = {'ingroup_edge1':ENS1,'ingroup_edge2': ENS2, 'outgroup_edge':ENS3}
+    return aln, ENSs
 
 def get_nabla_ENS(result):
     edge_names = result.tree.get_node_names(includeself = False)
