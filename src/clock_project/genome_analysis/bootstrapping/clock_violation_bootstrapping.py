@@ -28,12 +28,11 @@ def get_param_rules_upper_limit(model_name, upper):
 
 
 @define_app
-def test_hypothesis_clock_model_N(aln_path: IdentifierType, tree=None, opt_args=None) -> HypothesisResultType:
-    aln = load_json_app(aln_path)
+def test_hypothesis_clock_model_N(aln: AlignedSeqsType, tree=None, opt_args=None) -> SerialisableType:
     outgroup_name = aln.info['triads_species_name']['outgroup']
-    outgroup_edge = [outgroup_name]
-
     tree = make_tree(tip_names=aln.names)
+    print(outgroup_name)
+    outgroup_edge = [outgroup_name]
 
     model_kwargs = dict(
     tree=tree,
@@ -67,35 +66,5 @@ load_json_app = get_app("load_json")
 def p_value(result):
     return sum(result.observed.LR <= null_lr for null_lr in result.null_dist) / len(result.null_dist)
 
+clock_bootstrapper = test_hypothesis_clock_model_N()
 
-@click.command()
-@click.option("-n", "--num", type=str, default=None, help="number of CPU")
-def main(num):
-    aln_dir_new = '/Users/gulugulu/Desktop/honours/data_local/triples_aln_subset_info_added'
-
-    path_to_dir = '/Users/gulugulu/Desktop/honours/data_local/bootstrapping_test_non'
-    out_dstore = open_data_store(path_to_dir, mode="w", suffix="json")
-    write_json_app = get_app("write_json", data_store=out_dstore, id_from_source = get_id)
-
-    input_data_store = open_data_store(aln_dir_new, suffix= 'json')
-
-    bootstrapper = test_hypothesis_clock_model_N()
-
-    bootstrap_process = load_json_app + bootstrapper + write_json_app
-
-    print('App begun')
-            
-    bootstrap_process.apply_to(
-        input_data_store,
-        parallel=True,
-        par_kw=dict(
-            max_workers=10, use_mpi= False
-        ),
-    )
-
-    bootstrap_process.disconnect()
-
-    print('App end')
-
-if __name__ == "__main__":
-    main()

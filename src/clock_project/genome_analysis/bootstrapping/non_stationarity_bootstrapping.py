@@ -88,44 +88,5 @@ def p_value(result):
     return sum(result.observed.LR <= null_lr for null_lr in result.null_dist) / len(result.null_dist)
 
 
-@click.command()
-@click.option("-n", "--num", type=str, default=None, help="number of CPU")
-def main(num):
-    aln_dir_new = '/Users/gulugulu/Desktop/honours/data_local/triples_aln_subset_info_added_to_run'
-
-    path_to_dir = '/Users/gulugulu/Desktop/honours/data_local/bootstrapping_test_non'
-    out_dstore = open_data_store(path_to_dir, mode="w", suffix="json")
-    write_json_app = get_app("write_json", data_store=out_dstore, id_from_source = get_id)
-
-    input_data_store = open_data_store(aln_dir_new, suffix= 'json')
-
-    bootstrapper = test_hypothesis_model_bootstrapper()
-
-    bootstrap_process = load_json_app + bootstrapper + write_json_app
-
-    print('App begun')
-            
-    bootstrap_process.apply_to(
-        input_data_store,
-        parallel=True,
-        par_kw=dict(
-            max_workers=10, use_mpi= False
-        ),
-    )
-
-    bootstrap_process.disconnect()
-
-    print('App end')
-
-if __name__ == "__main__":
-    main()
-
-
-
-
-
-
-
-
-
+bootstrapper = test_hypothesis_model_bootstrapper()
 
