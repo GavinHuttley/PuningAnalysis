@@ -3,7 +3,7 @@ import glob
 import json
 import os
 from cogent3 import get_app, open_data_store
-from clock_project.genome_analysis.homolog_analysis import common_name_renamer, filter
+from clock_project.genome_analysis.sequence_alignment_filtering import common_name_renamer, filter
 
 # App initializations
 loader = get_app("load_unaligned", format="fasta", moltype="dna")

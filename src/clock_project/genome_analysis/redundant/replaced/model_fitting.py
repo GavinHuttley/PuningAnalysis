@@ -1,7 +1,7 @@
 import argparse
 import multiprocessing
 from cogent3 import get_app
-from clock_project.genome_analysis.homolog_analysis import filter, common_name_renamer
+from clock_project.genome_analysis.sequence_alignment_filtering import filter, common_name_renamer
 import json
 import os
 import glob

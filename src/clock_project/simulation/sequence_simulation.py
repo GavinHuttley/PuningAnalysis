@@ -57,7 +57,7 @@ def processing_parameters(combo, t_list, Q_collection, seed, output_dir):
     pi_indicate = 'low' if pi == [0.25, 0.25, 0.25, 0.25] else 'high'
     ancestor_seq = generate_ancestor(length, pi)  # Assuming this function is defined elsewhere
     ans_seq_list = [str(num) for num in ancestor_seq]
-    with open (f'{pi_indicate}_{length}_1.json', 'w') as outfile:
+    with open (f'{pi_indicate}_{length}_.json', 'w') as outfile:
         json.dump(ans_seq_list, outfile)
     for t in t_list: 
         path_to_dir = os.path.join(output_dir, f'aln_{pi_indicate}_{length}_{t}')
