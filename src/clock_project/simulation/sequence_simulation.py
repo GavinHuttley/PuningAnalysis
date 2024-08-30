@@ -2,27 +2,23 @@ import numpy as np
 import os
 from clock_project.simulation.wts import taxonomic_triple_simulation, generate_ancestor
 import json
-from cogent3 import get_app, make_tree
+from cogent3 import get_app
 import multiprocessing
 import click
 
-# def model_fitting(aln, opt_args = None):
-#     tree="('outgroup_edge3',('ingroup_edge1','ingroup_edge2')'internal_node');"
-#     GN_model = get_app("model", "GN", 
-#                     tree=tree,
-#                     opt_args=opt_args,
-#                     time_het="max",
-#                     optimise_motif_probs=True)
-#     res = GN_model(aln)
-#     return res
+# def get_seed_ancester_seq(pi_low, pi_high, len_short, len_long):
+#     seq_ls = generate_ancestor(len_short, pi_low)
+#     seq_ll = generate_ancestor(len_long, pi_low)
+#     seq_hs = generate_ancestor(len_short, pi_high)
+#     seq_hl = generate_ancestor(len_long, pi_high)
+#     seqs = {'low_short': seq_ls, 'high_short': seq_hs, 'low_long': seq_ll, 'high_long': seq_hl}
+#     return seqs
 
-def get_seed_ancester_seq(pi_low, pi_high, len_short, len_long):
-    seq_ls = generate_ancestor(len_short, pi_low)
-    seq_ll = generate_ancestor(len_long, pi_low)
-    seq_hs = generate_ancestor(len_short, pi_high)
-    seq_hl = generate_ancestor(len_long, pi_high)
-    seqs = {'low_short': seq_ls, 'high_short': seq_hs, 'low_long': seq_ll, 'high_long': seq_hl}
-    return seqs
+# seqs = get_seed_ancester_seq([0.25, 0.25, 0.25, 0.25], [0.06, 0.47, 0.08, 0.39], 500, 5000)
+# seqs_list = {key:[str(num) for num in seqs[key]] for key in seqs.keys()}
+
+# with open ('/Users/gulugulu/Desktop/honours/data_local_2/seed_ancester_sequences.json', 'w') as outfile:
+#     json.dump(seqs_list, outfile, indent=4)
 
 import os
 import numpy as np
@@ -50,17 +46,11 @@ def generate_combinations(length_list, pi_list):
     combinations = itertools.product(length_list, pi_list)
     return list(combinations)
 
-def processing_parameters(combo, t_list, Q_collection, seed, output_dir):
-    length, pi = combo
+def processing_parameters(ancestor_seq, length, pi, t, Q_collection, seed, output_dir):
     pi_indicate = 'low' if pi == [0.25, 0.25, 0.25, 0.25] else 'high'
-    ancestor_seq = generate_ancestor(length, pi)  # Assuming this function is defined elsewhere
-    ans_seq_list = [str(num) for num in ancestor_seq]
-    with open (f'/Users/gulugulu/Desktop/honours/data_local_2/seed_ancester_sequences/{pi_indicate}_{length}.json', 'w') as outfile:
-        json.dump(ans_seq_list, outfile)
-    for t in t_list: 
-        path_to_dir = os.path.join(output_dir, f'aln_{pi_indicate}_{length}_{t}')
-        os.makedirs(path_to_dir, exist_ok=True)
-        simulate_taxanomic_triples(ancestor_seq, Q_collection, pi, seed, t, path_to_dir)
+    path_to_dir = os.path.join(output_dir, f'aln_{pi_indicate}_{length}_{t}')
+    os.makedirs(path_to_dir, exist_ok=True)
+    simulate_taxanomic_triples(ancestor_seq, Q_collection, pi, seed, t, path_to_dir)
 
 
 @click.command()
