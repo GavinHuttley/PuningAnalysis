@@ -22,10 +22,8 @@ class BoundsViolation:
 def load_param_values(model_result:model_result) -> ParamRules:
     """get non-topology param values"""
     return ParamRules(
-        source=model_result.source, params=model_result.get_param_rules()
+        source=model_result.source, params=model_result.lf.get_param_rules()
     )
-
-
 
 
 class get_bounds_violation:

@@ -6,17 +6,15 @@ from cogent3 import get_app, make_tree
 import multiprocessing
 import click
 
-def model_fitting(aln, opt_args = None):
-    tree="('outgroup_edge3',('ingroup_edge1','ingroup_edge2')'internal_node');"
-    GN_model = get_app("model", "GN", 
-                    tree=tree,
-                    opt_args=opt_args,
-                    # unique_trees=True,
-                    # lf_args=dict(discrete_edges=[['outgroup_edge3']]),
-                    time_het="max",
-                    optimise_motif_probs=True)
-    res = GN_model(aln)
-    return res
+# def model_fitting(aln, opt_args = None):
+#     tree="('outgroup_edge3',('ingroup_edge1','ingroup_edge2')'internal_node');"
+#     GN_model = get_app("model", "GN", 
+#                     tree=tree,
+#                     opt_args=opt_args,
+#                     time_het="max",
+#                     optimise_motif_probs=True)
+#     res = GN_model(aln)
+#     return res
 
 def get_seed_ancester_seq(pi_low, pi_high, len_short, len_long):
     seq_ls = generate_ancestor(len_short, pi_low)
@@ -57,7 +55,7 @@ def processing_parameters(combo, t_list, Q_collection, seed, output_dir):
     pi_indicate = 'low' if pi == [0.25, 0.25, 0.25, 0.25] else 'high'
     ancestor_seq = generate_ancestor(length, pi)  # Assuming this function is defined elsewhere
     ans_seq_list = [str(num) for num in ancestor_seq]
-    with open (f'{pi_indicate}_{length}_.json', 'w') as outfile:
+    with open (f'/Users/gulugulu/Desktop/honours/data_local_2/seed_ancester_sequences/{pi_indicate}_{length}.json', 'w') as outfile:
         json.dump(ans_seq_list, outfile)
     for t in t_list: 
         path_to_dir = os.path.join(output_dir, f'aln_{pi_indicate}_{length}_{t}')

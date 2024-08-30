@@ -18,6 +18,19 @@ def triples_model_fitting(triples_aln, triples_species_name, ens_tree):
     return model_fitting_result
 
 
+
+def check_process(path, result_lf_dir, triples_info_dir):
+    file_name = os.path.basename(path.rstrip('/'))
+    print(file_name)
+    triples_alignment_paths = open_data_store(path, mode="r", suffix="json")
+    triples_info_path = os.path.join(triples_info_dir, file_name, "triples_species_names_dict.json")
+    triples_speccies_infos = json.load((open(triples_info_path, 'r')))
+    result_lf_path = os.path.join(result_lf_dir, f"{file_name}.json")
+    result = load_json_app(result_lf_path)
+    triples_aln = load_json_app(triples_alignment_paths[0])
+
+    return triples_speccies_infos, result, triples_aln
+
 def process_path(path, result_lf_dir, triples_info_dir, output_dir):
     file_name = os.path.basename(path.rstrip('/'))
     print(file_name)
