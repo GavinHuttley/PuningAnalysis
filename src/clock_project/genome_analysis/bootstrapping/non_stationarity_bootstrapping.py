@@ -1,15 +1,9 @@
-import json
-from cogent3 import get_app, open_data_store
+from cogent3 import get_app
 from cogent3.evolve.models import register_model
 from cogent3.evolve.ns_substitution_model import GeneralStationary
 from cogent3 import make_tree, get_moltype
-from cogent3.app.composable import LOADER, define_app, WRITER
-from cogent3.app.typing import AlignedSeqsType, BootstrapResultType, SerialisableType, IdentifierType
-import click
-import multiprocessing
-
-
-
+from cogent3.app.composable import define_app
+from cogent3.app.typing import AlignedSeqsType, SerialisableType, IdentifierType
 
 from cogent3.app import evo
 RATE_PARAM_UPPER = 50
