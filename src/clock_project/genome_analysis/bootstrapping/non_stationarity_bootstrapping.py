@@ -34,7 +34,7 @@ def get_param_rules_upper_limit(model_name, upper):
 
 @define_app
 def test_hypothesis_model_bootstrapper(aln: AlignedSeqsType, tree=None, opt_args=None) -> SerialisableType:
-    outgroup_name = aln.info['triads_species_name']['outgroup']
+    outgroup_name = aln.info['triples_species_name']['outgroup']
     print(outgroup_name)
     tree = make_tree(tip_names=aln.names)
     
