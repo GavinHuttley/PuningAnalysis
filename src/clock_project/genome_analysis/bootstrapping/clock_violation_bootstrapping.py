@@ -29,7 +29,7 @@ def get_param_rules_upper_limit(model_name, upper):
 
 @define_app
 def test_hypothesis_clock_model_N(aln: AlignedSeqsType, tree=None, opt_args=None) -> SerialisableType:
-    outgroup_name = aln.info['triads_species_name']['outgroup']
+    outgroup_name = aln.info['triples_species_name']['outgroup']
     tree = make_tree(tip_names=aln.names)
     print(outgroup_name)
     outgroup_edge = [outgroup_name]
