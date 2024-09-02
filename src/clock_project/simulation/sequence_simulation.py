@@ -35,7 +35,7 @@ seed_ancestor_seqs_list = json.load(open(seed_ancestor_seqs_path, 'r'))
 seed_ancestor_seqs = {key: [int(str) for str in seed_ancestor_seqs_list[key]] for key in seed_ancestor_seqs_list.keys()}
 
 
-def simulate_taxonomic_triples(ancestor_seq, Q_group, pi, seed, t, path_to_dir, ens_dict):
+def simulate_taxonomic_triples(ancestor_seq, Q_group, pi, seed, t, path_to_dir, ens_dict, Q_collection):
     length = len(ancestor_seq)
     out_dstore = open_data_store(path_to_dir, mode="w", suffix="json")
     write_json_app = get_app("write_json", data_store=out_dstore)
@@ -46,11 +46,11 @@ def simulate_taxonomic_triples(ancestor_seq, Q_group, pi, seed, t, path_to_dir, 
     )
     
     # Write alignment to a JSON file named after the process number
-    process_id = os.getpid()  # Use process ID for uniqueness
-    write_json_app(aln, identifier=f'{process_id}.json')
+    number = Q_collection.index(Q_group)
+    write_json_app(aln, identifier=f'{number}.json')
     
     # Store ens in the shared dictionary
-    ens_dict[process_id] = ens
+    ens_dict[number] = ens
 
 import itertools
 def generate_combinations(length_list, pi_list):
