@@ -39,7 +39,7 @@ def simulate_taxonomic_triples(ancestor_seq, Q_group, pi, seed, t, path_to_dir, 
     length = len(ancestor_seq)
     out_dstore = open_data_store(path_to_dir, mode="w", suffix="json")
     write_json_app = get_app("write_json", data_store=out_dstore)
-    Q_ingroup1, Q_ingroup2, Q_outgroup = Q_group
+    Q_ingroup1, Q_ingroup2, Q_outgroup = Q_group.values()
     aln, ens = taxonomic_triple_simulation(
         pi, np.array(Q_ingroup1), np.array(Q_ingroup2), np.array(Q_outgroup), 
         0, t, length, 1, seed, ancestor_seq
