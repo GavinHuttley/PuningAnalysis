@@ -6,39 +6,51 @@ from cogent3 import get_app
 import multiprocessing
 import click
 
-# def get_seed_ancester_seq(pi_low, pi_high, len_short, len_long):
-#     seq_ls = generate_ancestor(len_short, pi_low)
+# with open ('/Users/gulugulu/Desktop/honours/data_local_2/seed_ancester_sequences.json', 'r') as infile:
+#     seqs_list_original = json.load(infile)
+
+# seqs_list1 = {'low_short': seqs_list_original['low_short'], 'high_short': seqs_list_original['high_short']}
+
+# def get_seed_ancester_seq(pi_low, pi_high, len_long):
 #     seq_ll = generate_ancestor(len_long, pi_low)
-#     seq_hs = generate_ancestor(len_short, pi_high)
 #     seq_hl = generate_ancestor(len_long, pi_high)
-#     seqs = {'low_short': seq_ls, 'high_short': seq_hs, 'low_long': seq_ll, 'high_long': seq_hl}
+#     seqs = {'low_long': seq_ll, 'high_long': seq_hl}
 #     return seqs
 
-# seqs = get_seed_ancester_seq([0.25, 0.25, 0.25, 0.25], [0.06, 0.47, 0.08, 0.39], 500, 5000)
+# seqs = get_seed_ancester_seq([0.25, 0.25, 0.25, 0.25], [0.06, 0.47, 0.08, 0.39], 3000)
 # seqs_list = {key:[str(num) for num in seqs[key]] for key in seqs.keys()}
 
-# with open ('/Users/gulugulu/Desktop/honours/data_local_2/seed_ancester_sequences.json', 'w') as outfile:
-#     json.dump(seqs_list, outfile, indent=4)
+# seqs_list1.update(seqs_list)
+
+# with open ('/Users/gulugulu/Desktop/honours/data_local_2/seed_ancester_sequences_3.json', 'w') as outfile:
+#     json.dump(seqs_list1, outfile, indent=4)
 
 import os
 import numpy as np
 from cogent3 import open_data_store
 import ast
 
-def simulate_taxanomic_triples(ancestor_seq, Q_collection, pi, seed, t, path_to_dir):
-    ens_dict = {}
+seed_ancestor_seqs_path = 'input/seed_ancester_sequences.json'
+seed_ancestor_seqs_list = json.load(open(seed_ancestor_seqs_path, 'r'))
+seed_ancestor_seqs = {key: [int(str) for str in seed_ancestor_seqs_list[key]] for key in seed_ancestor_seqs_list.keys()}
+
+
+def simulate_taxonomic_triples(ancestor_seq, Q_group, pi, seed, t, path_to_dir, ens_dict):
     length = len(ancestor_seq)
     out_dstore = open_data_store(path_to_dir, mode="w", suffix="json")
     write_json_app = get_app("write_json", data_store=out_dstore)
-    for matrix_dict in Q_collection:
-        Q_ingroup1, Q_ingroup2, Q_outgroup = matrix_dict.values()
-        aln, ens = taxonomic_triple_simulation(pi, np.array(Q_ingroup1), np.array(Q_ingroup2), np.array(Q_outgroup), 0, t, length, 1, seed, ancestor_seq)
-        # Open a data store for each simulation
-        number = Q_collection.index(matrix_dict)
-        ens_dict[number] = ens
-        write_json_app(aln, identifier=f'{number}.json')
-    with open (f'{path_to_dir}_ens_dict.json', 'w') as outfile:
-        json.dump(ens_dict, outfile, indent=4)
+    Q_ingroup1, Q_ingroup2, Q_outgroup = Q_group
+    aln, ens = taxonomic_triple_simulation(
+        pi, np.array(Q_ingroup1), np.array(Q_ingroup2), np.array(Q_outgroup), 
+        0, t, length, 1, seed, ancestor_seq
+    )
+    
+    # Write alignment to a JSON file named after the process number
+    process_id = os.getpid()  # Use process ID for uniqueness
+    write_json_app(aln, identifier=f'{process_id}.json')
+    
+    # Store ens in the shared dictionary
+    ens_dict[process_id] = ens
 
 import itertools
 def generate_combinations(length_list, pi_list):
