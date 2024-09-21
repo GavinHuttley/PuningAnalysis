@@ -10,12 +10,6 @@ RATE_PARAM_UPPER = 50
 def get_id(result):
     return result.source.unique_id
 
-@register_model("nucleotide")
-def GSN(**kwargs):
-    """A General Stationary Nucleotide substitution model instance."""
-    kwargs["optimise_motif_probs"] = kwargs.get("optimise_motif_probs", True)
-    kwargs["name"] = kwargs.get("name", "GSN")
-    return GeneralStationary(get_moltype("dna").alphabet, **kwargs)
 
 def get_param_rules_upper_limit(model_name, upper):
     """rules to set the upper value for rate matrix terms"""
@@ -27,37 +21,31 @@ def get_param_rules_upper_limit(model_name, upper):
 
 @define_app
 def test_hypothesis_clock_model_N(aln: AlignedSeqsType, tree=None, opt_args=None) -> SerialisableType:
+    tree =  make_tree(tip_names=aln.names)
+    sp1 = aln.info['triples_species_name']['ingroup1']
+    sp2 = aln.info['triples_species_name']['ingroup2']
+
     outgroup_name = aln.info['triples_species_name']['outgroup']
-    tree = make_tree(tip_names=aln.names)
     print(outgroup_name)
     outgroup_edge = [outgroup_name]
 
     model_kwargs = dict(
     tree=tree,
-    opt_args=opt_args,
+    opt_args=None,
     # unique_trees=True,
     lf_args=dict(discrete_edges=[outgroup_edge]),
     optimise_motif_probs=True,
     )
-    null = evo.model(
-            "GN",
-            param_rules=get_param_rules_upper_limit("GN", RATE_PARAM_UPPER),
-            time_het = None,
-            **model_kwargs,
-        )
-    alt = evo.model(
-            "GN",
-            name="GN-max-het",
-            param_rules=get_param_rules_upper_limit("GN", RATE_PARAM_UPPER),
-            time_het = "max",
-            **model_kwargs,
-        )
-    
-    hyp = evo.hypothesis(null, alt, sequential=True)
-    bootstrapper = evo.bootstrap(hyp, num_reps=100, parallel=True)
-    result = bootstrapper(aln)    
+
+    null = get_app("model", "GN", name="clock", param_rules=[dict(par_name="length", edges=[sp1, sp2], is_independent=False)], **model_kwargs)
+    alt = get_app("model", "GN", name="no-clock", **model_kwargs)
+    hyp = get_app("hypothesis", null, alt)
+
+    # clock_p_value_observed[gene_name] = (result.pvalue)
+    bootstrapper = evo.bootstrap(hyp, num_reps=100, parallel=False)
+    result_test = bootstrapper(aln)    
     print('finish')
-    return result
+    return result_test
 
 load_json_app = get_app("load_json")
 
@@ -96,10 +84,3 @@ def main(input_path, num_processes, output_dir):
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
