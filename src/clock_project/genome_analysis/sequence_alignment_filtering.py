@@ -5,6 +5,8 @@ from c3wrangling.score import seed_and_extend_smith_waterman
 from cogent3.app.composable import define_app
 from cogent3.app import typing
 from cogent3.app.typing import UnalignedSeqsType, SeqsCollectionType
+import numpy as np
+from cogent3.maths.measure import jsd
 
 
 
@@ -126,10 +128,10 @@ def align_via_aa(seqs: typing.SeqsCollectionType, gc=1) -> typing.AlignedSeqsTyp
 @define_app
 def replace_common_species_names(alignment: SeqsCollectionType	
 ) -> SeqsCollectionType:
-    with open ('/Users/gulugulu/repos/PuningAnalysis/results/output_data/available_species_name.json', 'r') as infile1:
+    with open ('/Users/gulugulu/repos/PuningAnalysis/results/output_data/genome_information/available_species_name.json', 'r') as infile1:
         available_species_names = json.load(infile1)
 
-    with open ('/Users/gulugulu/repos/PuningAnalysis/results/output_data/common_names.json', 'r') as infile2:
+    with open ('/Users/gulugulu/repos/PuningAnalysis/results/output_data/genome_information/common_names.json', 'r') as infile2:
         common_names = json.load(infile2)
     name_map = dict(zip(available_species_names, common_names))
     
@@ -172,19 +174,19 @@ filter = drop_low_matching + drop_short_seq + drop_invalid_length + drop_ambiguo
 #     else:
 #         return "unknown"
     
-# def pairwise_jsd_matrix(species_data):
-#     species_keys = list(species_data.keys())
-#     num_species = len(species_keys)
-#     jsd_matrix = np.zeros((num_species, num_species))  # Initialize a square matrix
+def pairwise_jsd_matrix(species_data):
+    species_keys = list(species_data.keys())
+    num_species = len(species_keys)
+    jsd_matrix = np.zeros((num_species, num_species))  # Initialize a square matrix
 
-#     for i, species_1 in enumerate(species_keys):
-#         for j, species_2 in enumerate(species_keys):
-#             if i < j:  # To avoid recomputation, calculate only for i < j
-#                 jsd_value = jsd(species_data[species_1], species_data[species_2])
-#                 jsd_matrix[i, j] = jsd_value
-#                 jsd_matrix[j, i] = jsd_value  # JSD is symmetric
+    for i, species_1 in enumerate(species_keys):
+        for j, species_2 in enumerate(species_keys):
+            if i < j:  # To avoid recomputation, calculate only for i < j
+                jsd_value = jsd(species_data[species_1], species_data[species_2])
+                jsd_matrix[i, j] = jsd_value
+                jsd_matrix[j, i] = jsd_value  # JSD is symmetric
 
-#     return jsd_matrix
+    return jsd_matrix
 
 
 #def jsd_genetic_distance_scatters(dataframes_dict):

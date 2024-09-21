@@ -3,11 +3,9 @@ import click
 import os
 import json
 from cogent3 import get_app, open_data_store
-from cogent3.util.deserialise import deserialise_object
 from cogent3.maths.measure import jsd
 import numpy as np
 import multiprocessing
-import glob
 from clock_project.genome_analysis.sequence_alignment_filtering import cpos3, aligner
 
 load_json_app = get_app("load_json")
@@ -118,7 +116,7 @@ def get_triples_info(triples_species_names, ens_tree, sequence, result_lf, lca_n
     distribution_root = list(result_lf.get_motif_probs_by_node()[parent_node])
     ens_dict = {n: sub_tree.to_rich_dict()['edge_attributes'][n]['length'] for n in triples_species_names.values()}
     ens_difference = np.sqrt((ens_dict[ingroup_species_gene_name[0]]-ens_dict[ingroup_species_gene_name[1]])**2)
-    shortest_ens = min(ens_dict.values())  
+    shortest_ens = min(ens_dict.values())
 
     # matrices = get_Q_matrices(triples_species_names, lca_node, parent_node, ens_tree, result_lf, ens_dict)
     jsd_dict = {'Ingroup_JSD': ingroup_jsd, 'JSD_difference': {ingroup_species_gene_name[0]: jsd1, ingroup_species_gene_name[1]: jsd2}}

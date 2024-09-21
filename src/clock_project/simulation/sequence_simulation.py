@@ -62,7 +62,7 @@ def processing_parameters(ancestor_seq, length, pi, t, Q_collection, seed, outpu
     pi_indicate = 'low' if pi == [0.25, 0.25, 0.25, 0.25] else 'high'
     path_to_dir = os.path.join(output_dir, f'aln_{pi_indicate}_{length}_{t}')
     os.makedirs(path_to_dir, exist_ok=True)
-    simulate_taxanomic_triples(ancestor_seq, Q_collection, pi, seed, t, path_to_dir)
+    simulate_taxonomic_triples(ancestor_seq, Q_collection, pi, seed, t, path_to_dir)
 
 
 @click.command()

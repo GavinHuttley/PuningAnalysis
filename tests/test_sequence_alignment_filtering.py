@@ -60,6 +60,7 @@ def test_drop_ambiguous(seqs, quantile2):
 
 def test_common_name_renamer(sub_seqs, common_names):
     sub_seqs_renamed = common_name_renamer(sub_seqs)
+    print(sub_seqs_renamed)
     seq_names = sub_seqs_renamed.names
     for name in seq_names:
         assert name in common_names

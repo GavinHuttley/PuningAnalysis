@@ -6,10 +6,10 @@ import json
 from cogent3 import get_app, open_data_store
 from ensembl_lite._species import Species
 
-with open ('/Users/gulugulu/repos/PuningAnalysis/results/output_data/available_species_name.json', 'r') as infile:
+with open ('/Users/gulugulu/repos/PuningAnalysis/results/output_data/genome_information/available_species_name.json', 'r') as infile:
     available_species_names = json.load(infile)
 
-with open ('/Users/gulugulu/repos/PuningAnalysis/results/output_data/common_names_mapping.json',  'r') as common_name_infile:
+with open ('/Users/gulugulu/repos/PuningAnalysis/results/output_data/genome_information/common_names_mapping.json',  'r') as common_name_infile:
     common_names_mapping = json.load(common_name_infile)
 
 tree_path = '/Users/gulugulu/repos/PuningAnalysis/data/dataset2_ensemble_trees/raw_data/tree_nh_file/vertebrates_species-tree_Ensembl.nh'
