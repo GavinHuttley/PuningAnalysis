@@ -33,7 +33,9 @@ def get_triples_info(model_fitting_result, triples_species_name):
     ingroup_jsd = jsd(nuc_freqs1_reordered, nuc_freqs2_reordered)
     distribution_internal_root = list(model_fitting_result.lf.get_motif_probs_by_node()[lca_node])
     distribution_root = list(model_fitting_result.lf.get_motif_probs_by_node()['root'])
-    ens_dict = {n: sub_ens_tree.to_rich_dict()['edge_attributes'][n]['length'] for n in triples_species_name.values()}
+    triples_species_name_list = list(triples_species_name.values())
+    triples_species_name_list.extend([lca_node])
+    ens_dict = {n: sub_ens_tree.to_rich_dict()['edge_attributes'][n]['length'] for n in triples_species_name_list}
     ens_difference = abs(ens_dict[ingroup_species_gene_name[0]]-ens_dict[ingroup_species_gene_name[1]])
     nabla_dict = {}
     for species in ingroup_species_gene_name:
@@ -67,7 +69,7 @@ def process_path(path, triples_info_dir):
         if not isinstance(model_fittqting_result, NotCompleted):
             triple_info = get_triples_info(model_fittqting_result, triples_species_name)
             triples_info_dict[identifier] = triple_info
-    with open(os.path.join(path, 'triples_info_dict.json'), 'w') as f:
+    with open(os.path.join(path, 'triples_info_dict_new.json'), 'w') as f:
         json.dump(triples_info_dict, f, indent=4)
 
 
