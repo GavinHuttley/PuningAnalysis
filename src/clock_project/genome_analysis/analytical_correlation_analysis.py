@@ -310,8 +310,14 @@ def create_2d_density_plots(density_data1, density_data2, x_col, y_col):
 
 
 import statsmodels.api as sm
+from scipy.stats import spearmanr
 
 def plot_time_grouped_scatter_2x2(df, x_col, y_col):
+    custom_colorscale = {0.5: '#67a8cd',  # Color for time 0.5
+    1.0: '#6fba4f',  # Color for time 1.0
+    1.5: '#f0a3f8',  # Color for time 1.5
+    2.0: '#c66f70'    # Color for time 2.0
+}
     times = sorted(df['Time'].unique())
 
     fig = make_subplots(rows=2, cols=2,
@@ -330,11 +336,13 @@ def plot_time_grouped_scatter_2x2(df, x_col, y_col):
             x=x_data_no_outliers, 
             y=y_data_no_outliers, 
             mode='markers', 
-            name=f'Time {time}',  # This will automatically create legend entries
-            marker=dict(
-                size=2  # Adjust size as needed
+            name=time,  # This will automatically create legend entries
+            marker=dict(color = custom_colorscale[time],
+                size=1  # Adjust size as needed
             )),
             row=position[0], col=position[1])
+        
+        corr, p = spearmanr(x_data_no_outliers, y_data_no_outliers)
 
         # Calculate OLS trendline
         x = sm.add_constant(x_data_no_outliers)  # adding a constant for OLS
@@ -354,7 +362,7 @@ def plot_time_grouped_scatter_2x2(df, x_col, y_col):
         fig.add_annotation(
             xref="x domain", yref="y domain",
             x=0.95, y=0.95,
-            text=f"R² = {model.rsquared:.2f}",
+            text=f'\u03C1 = {corr:.2f}',
             showarrow=False,
             font=dict(size=10, color="red"),
             align="right",
