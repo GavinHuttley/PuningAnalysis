@@ -4,10 +4,20 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "clock_project"
-authors = [{name = "puning", email = "wangpuning28@gmail.com"}]
-dependencies = ["click", "mpi4py"]
+authors = [{name = "Puning Wang", email = "wangpuning28@gmail.com"}]
+dependencies = ["click", 
+                "cogent3[extra]", 
+                "pytest", 
+                "pytest-cov", 
+                "pandas",
+                "plotly",
+                "scipy",
+                "statsmodels",
+                "numpy"]
 readme = "README.md"
+requires-python = ">=3.10,<3.14"
 dynamic = ["version", "description"]
 
 [project.urls]
 Home = "https://github.com/GavinHuttley/PuningAnalysis.git"
+
