@@ -18,8 +18,8 @@ def remove_outliers_iqr(data1, data2):
         Q1 = np.percentile(data, 25)
         Q3 = np.percentile(data, 75)
         IQR = Q3 - Q1
-        lower_bound = Q1 - 5 * IQR
-        upper_bound = Q3 + 5 * IQR
+        lower_bound = Q1 - 6 * IQR
+        upper_bound = Q3 + 6 * IQR
         return lower_bound, upper_bound
 
     # Calculate IQR bounds for both lists
@@ -37,24 +37,6 @@ def remove_outliers_iqr(data1, data2):
 
     return filtered_data1, filtered_data2
 
-def remove_outliers_iqr_database(data, columns):
-    def compute_iqr_bounds(column_data):
-        Q1 = np.percentile(column_data, 25)
-        Q3 = np.percentile(column_data, 75)
-        IQR = Q3 - Q1
-        lower_bound = Q1 - 3 * IQR
-        upper_bound = Q3 + 3 * IQR
-        return lower_bound, upper_bound
-
-    # Make a copy of the data to avoid modifying the original DataFrame
-    data_filtered = data.copy()
-
-    for column in columns:
-        lower_bound, upper_bound = compute_iqr_bounds(data_filtered[column])
-        # Filter out rows where the column value is outside the IQR bounds
-        data_filtered = data_filtered[(data_filtered[column] >= lower_bound) & (data_filtered[column] <= upper_bound)]
-
-    return data_filtered
 
 def get_ens_diff_log_ratio(pi, Q1, Q2, t):
     ens1 = calculate_ENS(pi, Q1, t)

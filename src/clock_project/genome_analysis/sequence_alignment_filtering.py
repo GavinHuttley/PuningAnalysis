@@ -65,7 +65,7 @@ def too_many_ambigs(seqs: UnalignedSeqsType, frac=0.02) -> UnalignedSeqsType:
     return seqs.take_seqs(keep)
 
 @define_app
-def low_matching_significance(seqs: UnalignedSeqsType, quantile=0.1) -> UnalignedSeqsType:
+def low_matching_significance(seqs: UnalignedSeqsType, quantile=0.05) -> UnalignedSeqsType:
     names = seqs.names
     for name in names:
         if name.split('-')[0] == 'homo_sapiens':
@@ -113,6 +113,13 @@ def remove_redundent_seq(seqs: UnalignedSeqsType) -> UnalignedSeqsType:
             seq_names_remove.append(name)
 
     valid_seqs = seqs.take_seqs(seq_names_keep)
+    return valid_seqs
+
+@define_app
+def remove_unresolvable_codon_seqeunce(seqs: UnalignedSeqsType) -> UnalignedSeqsType:
+    valid_seqs = seqs.take_seqs_if(
+        lambda seq: seq.get_translation()
+    )
     return valid_seqs
 
 @define_app
