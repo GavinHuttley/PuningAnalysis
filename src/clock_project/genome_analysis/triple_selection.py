@@ -6,7 +6,7 @@ from cogent3 import get_app, open_data_store
 from cogent3.maths.measure import jsd
 import numpy as np
 import multiprocessing
-from clock_project.genome_analysis.sequence_alignment_filtering import cpos3, aligner
+from clock_project.data_processing.data_filter_seqs import cpos3, aligner
 
 load_json_app = get_app("load_json")
 # model_fitting_result_dir = '/Users/gulugulu/repos/PuningAnalysis/results/output_data/model_fitting_result_long_seq'

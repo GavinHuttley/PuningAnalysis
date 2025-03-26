@@ -1,10 +1,9 @@
-from ensembl_lite._species import Species
+from ensembl_tui._species import Species
 from cogent3 import load_tree
 import click
 import multiprocessing
 import json
 from cogent3 import get_app, open_data_store
-from ensembl_lite._species import Species
 
 with open ('/Users/gulugulu/repos/PuningAnalysis/results/output_data/genome_information/available_species_name.json', 'r') as infile:
     available_species_names = json.load(infile)
