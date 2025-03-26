@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from clock_project.genome_analysis.sequence_alignment_filtering import drop_low_matching, get_score_at_quantile, get_matching_score_to_human, drop_ambiguous, seq_without_redundent, common_name_renamer, drop_short_seq
+from clock_project.data_processing.data_filter_seqs import drop_low_matching, get_score_at_quantile, get_matching_score_to_human, drop_ambiguous, seq_without_redundent, common_name_renamer, drop_short_seq
 from cogent3 import get_app, open_data_store
 
 loader = get_app("load_unaligned", format="fasta", moltype="dna")

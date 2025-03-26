@@ -4,7 +4,7 @@ import json
 import random
 from cogent3 import get_app, make_tree
 from cogent3.util.deserialise import deserialise_object
-from clock_project.genome_analysis.sequence_alignment_filtering import codon_aligner, cpos3
+from clock_project.data_processing.data_filter_seqs import codon_aligner, cpos3
 from clock_project.simulation.wts import calculate_non_stationarity
 from cogent3.maths.measure import jsd
 import numpy as np
