@@ -21,3 +21,8 @@ dynamic = ["version", "description"]
 [project.urls]
 Home = "https://github.com/GavinHuttley/PuningAnalysis.git"
 
+[project.scripts]
+cviol = "clock_project.genome_analysis.bootstrapping.clock_violation_bootstrapping:main"
+
+
+
