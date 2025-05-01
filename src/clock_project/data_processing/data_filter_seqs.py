@@ -1,14 +1,11 @@
-from cogent3 import get_app, open_data_store, load_unaligned_seqs
+from cogent3 import get_app, open_data_store
 import pandas as pd
 from c3wrangling.score import seed_and_extend_smith_waterman
 from cogent3.app.composable import define_app
 from cogent3.app.typing import UnalignedSeqsType
 import click
 import multiprocessing
-import pathlib
-from multiprocessing import Manager
 
-loader = get_app("load_unaligned", format="fasta", moltype="dna")
 trim_stop = get_app("trim_stop_codons", gc=1)
 cpos3 = get_app("take_codon_positions", 3)
 translater = get_app("translate_seqs")
@@ -129,16 +126,8 @@ drop_invalid_length = length_divisible_by_three()
 drop_short_seq = short_seq(length=500)
 seq_without_redundent = remove_redundent_seq()
 trim_stop = get_app("trim_stop_codons", gc=1)
-seqs_filter = valid_cds + drop_low_matching + drop_short_seq + drop_invalid_length + drop_ambiguous + seq_without_redundent + trim_stop
+remove_untranlatable_seqs = remove_unresolvable_codon_seqeunce()
 
-
-import pandas as pd
-
-# Modify the process_path function to track sequence count at each step
-def process_path(path, writer):
-    seqs = loader(path)
-    filtered_seqs = seqs_filter(seqs)
-    writer(filtered_seqs)
 
 
 @click.command()
@@ -147,14 +136,12 @@ def process_path(path, writer):
 @click.option('-n', '--num_processes', default=multiprocessing.cpu_count(), help='Number of processes to use (default: number of CPUs)')
 @click.option('-l', '--limit', type=int, help='Limit the number of files to process')
 def main(input, num_processes, output_dir, limit):
-    fasta_dir = pathlib.Path(input)  
-    fasta_files = list(fasta_dir.glob("*.fa"))
+    input_data_store = open_data_store(input, suffix='fa', limit=limit)
     out_dstore = open_data_store(output_dir, mode="w", suffix="fa")
     writer = get_app("write_seqs", out_dstore, format="fasta")
-
-
-    with multiprocessing.Pool(processes=num_processes) as pool:
-        pool.starmap(process_path, [(path, writer) for path in fasta_files])
+    loader = get_app("load_unaligned", format="fasta", moltype="dna")
+    seq_filter = loader + valid_cds + drop_low_matching + drop_short_seq + drop_invalid_length + drop_ambiguous + seq_without_redundent + trim_stop + writer
+    seq_filter.apply_to(input_data_store.completed, parallel=True, par_kw=dict(max_workers=num_processes))
 
 
 if __name__ == "__main__":
