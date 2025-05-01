@@ -1,5 +1,4 @@
 from clock_project.simulation.wts import calculate_non_stationarity
-import numpy as np
 from cogent3.maths.measure import jsd
 from cogent3.util.deserialise import deserialise_object
 import multiprocessing
@@ -11,6 +10,7 @@ from cogent3 import get_app, open_data_store
 import click
 
 load_json_app = get_app("load_json")
+
 
 def change_nucleotide_order(motif_prob):
     nuc_freq = {'A': motif_prob[0],'C': motif_prob[1],'G': motif_prob[2],'T': motif_prob[3]}

@@ -8,7 +8,7 @@ from cogent3.app.composable import NotCompleted
 
 # Define global variables
 load_json_app = get_app("load_json")
-base_dir = '/Users/gulugulu/Desktop/honours/data_local_2/triples_model_fitting_550_threshold'
+base_dir = '/Users/gulugulu/clock/mammal_orthologs_hsap_1/triples_model_fitting'
 
 def get_gene_paths(base_dir):
     """Get a list of paths to gene directories under the base directory."""
@@ -48,7 +48,7 @@ def process_model_fitting_results(gene_path, bounary_violation_function):
 
 def save_valid_identifiers(valid_triads_identifier_dict):
     """Save the valid triads identifiers to a JSON file."""
-    with open('/Users/gulugulu/Desktop/honours/data_local_2/valid_triads_identifier_new.json', 'w') as outfile:
+    with open('/Users/gulugulu/clock/mammal_orthologs_hsap_1/valid_triads_identifier.json', 'w') as outfile:
         json.dump(valid_triads_identifier_dict, outfile, indent=4)
 
 def process_gene_info(base_dir, valid_triads_identifier_dict):
@@ -57,7 +57,7 @@ def process_gene_info(base_dir, valid_triads_identifier_dict):
     matrices_dict_full = {}
 
     for gene_name, valid_triads_identifier in valid_triads_identifier_dict.items():
-        triples_info_dir = os.path.join(base_dir, gene_name, 'triples_info_dict.json')
+        triples_info_dir = os.path.join(base_dir, gene_name, 'triples_info_dict_new.json')
         triples_info_dict = json.load(open(triples_info_dir, 'r'))
 
         ens_pairs = []
@@ -99,7 +99,7 @@ def convert_arrays_to_lists(obj):
 def save_matrices_dict_full(matrices_dict_full):
     """Save the full matrices dictionary to a JSON file."""
     matrices_dict_full_converted = convert_arrays_to_lists(matrices_dict_full)
-    with open('/Users/gulugulu/Desktop/honours/data_local_2/valid_matrix_full.json', 'w') as outfile:
+    with open('/Users/gulugulu/clock/mammal_orthologs_hsap_1/valid_matrix_full.json', 'w') as outfile:
         json.dump(matrices_dict_full_converted, outfile, indent=4)
 
 def main():

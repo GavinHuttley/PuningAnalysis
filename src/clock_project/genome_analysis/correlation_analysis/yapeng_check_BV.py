@@ -47,5 +47,3 @@ class get_bounds_violation:
         return BoundsViolation(source=params.source, vio=vio)
 
 
-if __name__ == "__main__":
-    main()  # This should be defined, or you need to call get_bounds_violation().main() with a proper model_result
