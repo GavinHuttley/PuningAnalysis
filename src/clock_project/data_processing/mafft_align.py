@@ -47,56 +47,50 @@ def get_mafft_aligned_seq(seqs: typing.SeqsCollectionType, gc=1) -> typing.Align
         Path to the aligned amino acid FASTA file.
     """
     # Temporary directory context
-    try:
-        if seqs.num_seqs < 3:
-            print('species number less than 3')
-            return None
-        else: 
-            with tempdir() as temp_dir:
-                aa_fasta_path = temp_dir / "aa_sequences.fasta"
-                aligned_aa_path = temp_dir / "aligned_aa.fasta"
-                translater = get_app("translate_seqs", gc=gc)
+    with tempdir() as temp_dir:
+        aa_fasta_path = temp_dir / "aa_sequences.fasta"
+        aligned_aa_path = temp_dir / "aligned_aa.fasta"
+        translater = get_app("translate_seqs", gc=gc)
 
-                # Load and translate the first FASTA file
-                aa_seqs = translater(seqs)
+        # Load and translate the first FASTA file
+        aa_seqs = translater(seqs)
 
-                # Write translated amino acid sequences to temporary FASTA file
-                aa_seqs.write(aa_fasta_path, format="fasta")
+        # Write translated amino acid sequences to temporary FASTA file
+        aa_seqs.write(aa_fasta_path, format="fasta")
 
-                # Build the MAFFT command
-                mafft_command = f"mafft --amino {aa_fasta_path} > {aligned_aa_path}"
-                print(f"Running MAFFT: {mafft_command}")
+        # Build the MAFFT command
+        mafft_command = f"mafft --amino {aa_fasta_path} > {aligned_aa_path}"
+        print(f"Running MAFFT: {mafft_command}")
 
-                # Execute the MAFFT command
-                exec_command(mafft_command)
+        # Execute the MAFFT command
+        exec_command(mafft_command)
 
-                # Load the aligned amino acid sequences
-                loader_aligned = get_app("load_aligned", format="fasta")
-                aligned_seq_collection = loader_aligned(str(aligned_aa_path)).to_type(array_align=True)        
+        # Load the aligned amino acid sequences
+        loader_aligned = get_app("load_aligned", format="fasta")
+        aligned_seq_collection = loader_aligned(str(aligned_aa_path)).to_type(array_align=True)        
 
-                aligned_seqs = aligned_seq_collection.replace_seqs(seqs)
-                aligned = True
-                print('successfully aligned')
+        aligned_seqs = aligned_seq_collection.replace_seqs(seqs)
+        print('successfully aligned')
 
-            return aligned_seqs
+    return aligned_seqs
         
-    except Exception as e:
-        print("Cannot be aligned")
-        return None
+mafft_aligner = get_mafft_aligned_seq()   
 
-aligner = get_mafft_aligned_seq()   
-load_json_app = get_app("load_json")
+def process_path(in_path, out_dstore):
+    """
+    Processes the given path by loading, aligning, and writing sequences.
+    """
+    loader = get_app("load_unaligned", format="fasta", moltype="dna")
+    
+    writer = get_app("write_seqs", out_dstore, format="fasta")
 
-
-def process_path(path, write_json_app):
-    file_name = path.unique_id
-    print(file_name)
-    seqs = load_json_app(path)
-    aligned_seqs = aligner(seqs)
-    if aligned_seqs is not None:
-        write_json_app(aligned_seqs, identifier=file_name)
-    else:
-        print(f"Skipping file {file_name} due to alignment failure or insufficient sequences.")
+    file_name = in_path.unique_id
+    print(f"Processing file: {file_name}")
+    
+    processer = loader + mafft_aligner
+    raw_aligned = processer(in_path)
+    writer(raw_aligned, identifier=f'{file_name}')
+    
 
 @click.command()
 @click.argument('input', type=click.Path(exists=True))
@@ -109,14 +103,15 @@ def main(input, num_processes, output_dir, limit):
     
     INPUT: Path to the directory containing sequence files or a JSON file listing the paths.
     """
-    input_data_store = open_data_store(input, suffix='json', limit=limit)
-    out_dstore = open_data_store(output_dir, mode="w", suffix="json")
-    write_json_app = get_app("write_json", data_store=out_dstore)
-
+    input_data_store = open_data_store(input, suffix='fa', limit=limit)
+    out_dstore = open_data_store(output_dir, mode="w", suffix="fa")
     
-    with multiprocessing.Pool(processes=num_processes) as pool:
-        pool.starmap(process_path, [(path, write_json_app) for path in input_data_store.completed])
 
+    with multiprocessing.Pool(processes=num_processes) as pool:
+        pool.starmap(
+            process_path, 
+            [(path, out_dstore) for path in input_data_store.completed]
+        )
 if __name__ == "__main__":
     main()
 
