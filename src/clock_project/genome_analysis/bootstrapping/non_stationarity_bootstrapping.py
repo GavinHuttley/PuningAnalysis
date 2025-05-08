@@ -58,28 +58,4 @@ def test_hypothesis_model_bootstrapper(aln: AlignedSeqsType, tree=None, opt_args
     print('finish')
     return result
 
-load_json_app = get_app("load_json")
-
-
-# @define_app
-# def customised_load_json(DataMember: IdentifierType) -> AlignedSeqsType:
-#     aln = load_json_app(DataMember)
-#     aln.source = DataMember.unique_id
-#     return aln
-
-# load_json_customised = customised_load_json()
-
-
-# # @define_app(app_type=WRITER)
-# # def customised_write_json(bootstrap_result_serilised: SerialisableType, unique_id: IdentifierType):
-# #     path_to_dir = '/Users/gulugulu/Desktop/honours/data_local/'
-# #     out_dstore = open_data_store(path_to_dir, mode="w", suffix="json")
-# #     write_json_app = get_app("write_json", data_store=out_dstore, identifier = unique_id)
-# #     return write_json_app
-
-
-# def p_value(result):
-#     return sum(result.observed.LR <= null_lr for null_lr in result.null_dist) / len(result.null_dist)
-
-
 bootstrapper = test_hypothesis_model_bootstrapper()

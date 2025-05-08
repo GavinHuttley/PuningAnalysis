@@ -1,21 +1,20 @@
-from cogent3.evolve.models import register_model
-from cogent3.evolve.ns_substitution_model import GeneralStationary
-from cogent3 import make_tree, get_moltype, get_app, open_data_store
+from cogent3 import make_tree, get_app, open_data_store
 from cogent3.app.composable import define_app
 from cogent3.app.typing import AlignedSeqsType, SerialisableType
 from cogent3.app import evo
 import click
+from cogent3.app import io as io_app
+
+def configure_parallel(parallel: bool, mpi: int,  num_processes: int) -> dict:
+    mpi = None if mpi < 2 else mpi
+    parallel = True if mpi else parallel
+    par_kw = dict(max_workers=mpi, use_mpi=True) if mpi else dict(max_workers=num_processes, use_mpi=False)
+    return {"parallel": parallel, "par_kw": par_kw}
+
 RATE_PARAM_UPPER = 50
 
 def get_id(result):
     return result.source.unique_id
-
-@register_model("nucleotide")
-def GSN(**kwargs):
-    """A General Stationary Nucleotide substitution model instance."""
-    kwargs["optimise_motif_probs"] = kwargs.get("optimise_motif_probs", True)
-    kwargs["name"] = kwargs.get("name", "GSN")
-    return GeneralStationary(get_moltype("dna").alphabet, **kwargs)
 
 def get_param_rules_upper_limit(model_name, upper):
     """rules to set the upper value for rate matrix terms"""
@@ -26,71 +25,58 @@ def get_param_rules_upper_limit(model_name, upper):
 
 
 @define_app
-def test_hypothesis_clock_model_N(aln: AlignedSeqsType, tree=None, opt_args=None) -> SerialisableType:
+def test_hypothesis_clock_model(aln: AlignedSeqsType, tree=None, opt_args=None, num_reps=100) -> SerialisableType:
     outgroup_name = aln.info['triples_species_name']['outgroup']
     tree = make_tree(tip_names=aln.names)
-    print(outgroup_name)
+    sp1 = aln.info['triples_species_name']['ingroup1']
+    sp2 = aln.info['triples_species_name']['ingroup2']
     outgroup_edge = [outgroup_name]
 
     model_kwargs = dict(
     tree=tree,
     opt_args=opt_args,
-    # unique_trees=True,
     lf_args=dict(discrete_edges=[outgroup_edge]),
     optimise_motif_probs=True,
     )
-    null = evo.model(
-            "GN",
-            param_rules=get_param_rules_upper_limit("GN", RATE_PARAM_UPPER),
-            time_het = None,
-            **model_kwargs,
-        )
-    alt = evo.model(
-            "GN",
-            name="GN-max-het",
-            param_rules=get_param_rules_upper_limit("GN", RATE_PARAM_UPPER),
-            time_het = "max",
-            **model_kwargs,
-        )
-    
-    hyp = evo.hypothesis(null, alt, sequential=True)
-    bootstrapper = evo.bootstrap(hyp, num_reps=100, parallel=True)
+    null = get_app("model", "GN", name="clock", param_rules=[dict(par_name="length", edges=[sp1, sp2], is_independent=False)], **model_kwargs)
+    alt = get_app("model", "GN", name="no-clock", **model_kwargs)
+    hyp = get_app("hypothesis", null, alt)
+    bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=True)
     result = bootstrapper(aln)    
-    print('finish')
     return result
 
-load_json_app = get_app("load_json")
-
-def p_value(result):
-    return sum(result.observed.LR <= null_lr for null_lr in result.null_dist) / len(result.null_dist)
-
-clock_bootstrapper = test_hypothesis_clock_model_N()
+loader_db = io_app.load_db()
 
 
 @click.command()
 @click.argument('input_path', type=click.Path(exists=True))
 @click.option('--num_processes', '-n', type=int, help='Number of processes to use (default: number of CPUs)')
+@click.option('--mpi', '-m', type=int, default=0, help='Number of MPI processes to use')
 @click.option('--output_dir', '-o', type=click.Path(), help='Output directory')
-def main(input_path, num_processes, output_dir):
+@click.option('--limit', '-l', type=int, help='limit for number of files')
+@click.option('--num_reps', '-r', type=int, default=100, help='Number of bootstrap replicates')
 
-    print(input_path)
+def main(input_path, num_processes, mpi, output_dir, limit, num_reps):
+
+    clock_bootstrapper = test_hypothesis_clock_model(num_reps)
 
     out_dstore = open_data_store(output_dir, mode="w", suffix="json")
     write_json_app = get_app("write_json", data_store=out_dstore, id_from_source = get_id)
 
-    input_data_store = open_data_store(input_path, suffix= 'json')
+    input_data_store = open_data_store(input_path)
 
-    clock_bootstrap_process = load_json_app + clock_bootstrapper + write_json_app
+    clock_bootstrap_process = loader_db + clock_bootstrapper + write_json_app
 
+    parallel_config = configure_parallel(parallel=True, num_processes=num_processes, mpi=mpi)
 
+    print("start")
     clock_bootstrap_process.apply_to(
-        input_data_store,
-        parallel=True,
-        par_kw=dict(
-            max_workers=num_processes, use_mpi=False
-        ),
+        input_data_store[0:limit],
+        show_progress=True,
+        cleanup=True,
+        **parallel_config,
     )
-    print("Finish app call")
+    print("end")
     clock_bootstrap_process.disconnect()
 
 
