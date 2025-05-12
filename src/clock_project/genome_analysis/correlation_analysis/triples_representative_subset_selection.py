@@ -2,6 +2,8 @@ import os
 import json
 import pandas as pd
 from cogent3 import get_app, open_data_store
+from cogent3.app import io as io_app
+
 
 
 load_json_app = get_app("load_json")
@@ -47,12 +49,11 @@ def sample_triples(info_path, align_path, sample_fraction, writer):
 def main():
     info_dir = '/Users/gulugulu/clock/mammal_orthologs_hsap_1/triples_model_fitting'
     align_dir = '/Users/gulugulu/clock/mammal_orthologs_hsap_1/taxanomic_triples_alignments'
-    output_dir = '/Users/gulugulu/clock/mammal_orthologs_hsap_1/triples_representative_subset'
+    output_dir = '/Users/gulugulu/clock/mammal_orthologs_hsap_1/triples_representative_subset.sqlitedb'
     sample_fraction = 0.1
 
-    out_dstore = open_data_store(output_dir, mode="w", suffix="fa")
-    writer = get_app("write_seqs", data_store=out_dstore, format="fasta")
-
+    out_dstore = open_data_store(output_dir, mode="w")
+    writer = io_app.write_db(data_store=out_dstore)
 
     for gene_name in os.listdir(info_dir):
         info_path = os.path.join(info_dir, gene_name, 'triples_info_dict_new.json')

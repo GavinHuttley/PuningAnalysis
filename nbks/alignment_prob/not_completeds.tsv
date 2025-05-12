@@ -1,0 +1,6 @@
+not completed records
+type	origin	message	num	source
+ERROR	length_divisible_by_three	"""invalid data type, '...n SequenceCollection"""	54	
+ERROR	low_matching_significance	"""AttributeError: 'dic...ociated with a value"""	29	ENSG00000288644.fa, ENSG00000288629.fa, ...
+ERROR	select_translatable	'TypeError: sequence ...instance, list found'	1	ENSG00000227152.fa
+ERROR	remove_redundent_seq	"""invalid data type, '...n SequenceCollection"""	1	
