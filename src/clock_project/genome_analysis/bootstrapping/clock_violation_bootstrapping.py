@@ -107,10 +107,10 @@ def main(input_path, num_processes, mpi, output_dir, limit, num_reps):
     app = loader_db + toc_bootstrapper + write_json_app
 
     parallel_config = configure_parallel(
-        parallel=True, num_processes=num_processes, mpi=mpi
+        parallel=True, mpi=mpi, num_processes=num_processes
     )   
 
-
+    print('started')
     app.apply_to(
         input_data_store[0:limit],
         show_progress=True,
