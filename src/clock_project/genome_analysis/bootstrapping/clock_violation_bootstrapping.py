@@ -7,7 +7,6 @@ from cogent3.app import io as io_app
 from scitrack import CachingLogger
 import uuid
 from pathlib import Path
-from mpi4py.futures import MPIPoolExecutor
 
 
 def configure_parallel(parallel: bool, mpi: int, num_processes: int) -> dict:
@@ -111,11 +110,6 @@ def main(input_path, num_processes, mpi, output_dir, limit, num_reps):
         parallel=True, num_processes=num_processes, mpi=mpi
     )   
 
-
-    if mpi:
-        print(f"[INFO] Running with MPI ({mpi} workers)")
-    else:
-        print(f"[INFO] Running with local processes ({num_processes} workers)")
 
     app.apply_to(
         input_data_store[0:limit],
