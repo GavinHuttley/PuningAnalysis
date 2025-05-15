@@ -109,11 +109,10 @@ def main(input_path, num_processes, mpi, output_dir, limit, num_reps):
 
     parallel_config = configure_parallel(
         parallel=True, num_processes=num_processes, mpi=mpi
-    )
-    
+    )   
 
     if mpi:
-        print(f"Spawning {mpi} MPI workers via MPIPoolExecutor")
+        print(f"[INFO] Running with MPI ({mpi} workers)")
         with MPIPoolExecutor(max_workers=mpi) as executor:
             app.apply_to(
                 input_data_store[0:limit],
@@ -123,6 +122,7 @@ def main(input_path, num_processes, mpi, output_dir, limit, num_reps):
                 executor=executor,
             )
     else:
+        print(f"[INFO] Running with local processes ({num_processes} workers)")
         app.apply_to(
             input_data_store[0:limit],
             show_progress=True,
@@ -130,6 +130,7 @@ def main(input_path, num_processes, mpi, output_dir, limit, num_reps):
             logger=LOGGER,
             **parallel_config,
         )
+
 
     print("finished")
 
