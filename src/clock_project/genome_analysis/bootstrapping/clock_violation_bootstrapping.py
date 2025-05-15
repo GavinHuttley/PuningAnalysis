@@ -7,7 +7,7 @@ from cogent3.app import io as io_app
 from scitrack import CachingLogger
 import uuid
 from pathlib import Path
-
+from mpi4py.futures import MPIPoolExecutor
 
 
 def configure_parallel(parallel: bool, mpi: int, num_processes: int) -> dict:
@@ -110,14 +110,26 @@ def main(input_path, num_processes, mpi, output_dir, limit, num_reps):
     parallel_config = configure_parallel(
         parallel=True, num_processes=num_processes, mpi=mpi
     )
+    
 
-    app.apply_to(
-        input_data_store[0:limit],
-        show_progress=True,
-        cleanup=True,
-        logger=LOGGER,
-        **parallel_config,
-    )
+    if mpi:
+        print(f"Spawning {mpi} MPI workers via MPIPoolExecutor")
+        with MPIPoolExecutor(max_workers=mpi) as executor:
+            app.apply_to(
+                input_data_store[0:limit],
+                show_progress=True,
+                cleanup=True,
+                logger=LOGGER,
+                executor=executor,
+            )
+    else:
+        app.apply_to(
+            input_data_store[0:limit],
+            show_progress=True,
+            cleanup=True,
+            logger=LOGGER,
+            **parallel_config,
+        )
 
     print("finished")
 
