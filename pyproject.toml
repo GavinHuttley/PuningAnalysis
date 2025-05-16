@@ -6,7 +6,7 @@ build-backend = "flit_core.buildapi"
 name = "clock_project"
 authors = [{name = "Puning Wang", email = "wangpuning28@gmail.com"}]
 dependencies = ["click", 
-                "cogent3[extra]", 
+                "cogent3", 
                 "pytest", 
                 "pytest-cov", 
                 "pandas",
