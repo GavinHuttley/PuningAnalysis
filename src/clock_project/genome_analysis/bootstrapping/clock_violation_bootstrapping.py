@@ -7,6 +7,9 @@ from cogent3.app import io as io_app
 from scitrack import CachingLogger
 import uuid
 from pathlib import Path
+import shutil
+import os
+
 
 
 def configure_parallel(parallel: bool, mpi: int, num_processes: int) -> dict:
@@ -88,7 +91,17 @@ _click_command_opts = {
 @click.option(
     "--num_reps", "-r", type=int, default=100, help="Number of bootstrap replicates"
 )
-def main(input_path, num_processes, mpi, output_dir, limit, num_reps):
+@click.option(
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force overwrite output directory by deleting existing content.",
+)
+
+def main(input_path, num_processes, mpi, output_dir, limit, num_reps, force):
+    if force and output_dir and os.path.exists(output_dir):
+        shutil.rmtree(output_dir, ignore_errors=True)
+
     outpath = Path(output_dir) / f"{uuid.uuid4().hex}.log"
 
     LOGGER = CachingLogger(log_file_path=outpath, create_dir=True)
@@ -100,6 +113,8 @@ def main(input_path, num_processes, mpi, output_dir, limit, num_reps):
     toc_bootstrapper = test_hypothesis_clock_model(num_reps =  num_reps)
 
     out_dstore = open_data_store(output_dir, mode="w", suffix="json")
+   
+
     write_json_app = get_app("write_json", data_store=out_dstore, id_from_source=get_id)
 
     input_data_store = open_data_store(input_path)
