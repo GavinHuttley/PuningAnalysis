@@ -3,7 +3,6 @@ from cogent3.app.composable import define_app
 from cogent3.app.typing import AlignedSeqsType, SerialisableType
 from cogent3.app import evo
 import click
-from cogent3.app import io as io_app
 from scitrack import CachingLogger
 import uuid
 from pathlib import Path
@@ -68,8 +67,7 @@ def test_hypothesis_clock_model(
     return result
 
 
-loader_db = io_app.load_db()
-
+loader_json = get_app("load_json")
 
 _click_command_opts = {
     "no_args_is_help": True,
@@ -119,14 +117,14 @@ def main(input_path, num_processes, mpi, output_dir, limit, num_reps, force):
 
     input_data_store = open_data_store(input_path)
 
-    app = loader_db + toc_bootstrapper + write_json_app
+    clock_app = loader_json + toc_bootstrapper + write_json_app
 
     parallel_config = configure_parallel(
         parallel=True, mpi=mpi, num_processes=num_processes
     )   
 
     print('started')
-    app.apply_to(
+    clock_app.apply_to(
         input_data_store[0:limit],
         show_progress=True,
         cleanup=True,
