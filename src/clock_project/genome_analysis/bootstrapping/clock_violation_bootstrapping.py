@@ -1,13 +1,4 @@
 
-# MUST be before any other cogent3 imports
-import sys
-from cogent3.core.annotation_db import _Annotatable
-
-# Monkey-patch the serialization method
-def _safe_getstate(self):
-    return {"data": None, "source": getattr(self, "source", None)}
-
-_Annotatable.__getstate__ = _safe_getstate
 
 from cogent3 import make_tree, get_app, open_data_store
 from cogent3.app.composable import define_app
@@ -21,44 +12,43 @@ import shutil
 import os
 
 
-
-# def configure_parallel(parallel: bool, mpi: int, num_processes: int) -> dict:
-#     """Simplified parallel configuration for debugging"""
-#     if mpi and mpi > 1:
-#         print(f"Using MPI with {mpi} workers")
-#         return {
-#             "parallel": True,
-#             "par_kw": {
-#                 "max_workers": mpi,
-#                 "use_mpi": True,
-#                 "chunksize": 1  # Added for debugging
-#             }
-#         }
-#     elif num_processes and num_processes > 1:
-#         print(f"Using multiprocessing with {num_processes} workers")
-#         return {
-#             "parallel": True,
-#             "par_kw": {
-#                 "max_workers": num_processes,
-#                 "use_mpi": False,
-#                 "chunksize": 1  # Added for debugging
-#             }
-#         }
-#     print("Running sequentially (no parallelization)")
-#     return {"parallel": False, "par_kw": {}}
-
-
 def configure_parallel(parallel: bool, mpi: int, num_processes: int) -> dict:
+    """Simplified parallel configuration for debugging"""
     if mpi and mpi > 1:
+        print(f"Using MPI with {mpi} workers")
         return {
-            "parallel": False,  # Force single-process mode
+            "parallel": True,
             "par_kw": {
-                "max_workers": 1,  # No parallel workers
-                "use_mpi": False,
-                "chunksize": 1
+                "max_workers": mpi,
+                "use_mpi": True,
+                "chunksize": 1  # Added for debugging
             }
         }
+    elif num_processes and num_processes > 1:
+        print(f"Using multiprocessing with {num_processes} workers")
+        return {
+            "parallel": True,
+            "par_kw": {
+                "max_workers": num_processes,
+                "use_mpi": False,
+                "chunksize": 1  # Added for debugging
+            }
+        }
+    print("Running sequentially (no parallelization)")
     return {"parallel": False, "par_kw": {}}
+
+
+# def configure_parallel(parallel: bool, mpi: int, num_processes: int) -> dict:
+#     if mpi and mpi > 1:
+#         return {
+#             "parallel": False,  # Force single-process mode
+#             "par_kw": {
+#                 "max_workers": 1,  # No parallel workers
+#                 "use_mpi": False,
+#                 "chunksize": 1
+#             }
+#         }
+#     return {"parallel": False, "par_kw": {}}
 
 def get_id(result):
     return result.source.unique_id
