@@ -1,3 +1,14 @@
+
+# MUST be before any other cogent3 imports
+import sys
+from cogent3.core.annotation_db import _Annotatable
+
+# Monkey-patch the serialization method
+def _safe_getstate(self):
+    return {"data": None, "source": getattr(self, "source", None)}
+
+_Annotatable.__getstate__ = _safe_getstate
+
 from cogent3 import make_tree, get_app, open_data_store
 from cogent3.app.composable import define_app
 from cogent3.app.typing import AlignedSeqsType, SerialisableType
