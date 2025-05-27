@@ -12,43 +12,44 @@ import shutil
 import os
 
 
-def configure_parallel(parallel: bool, mpi: int, num_processes: int) -> dict:
-    """Simplified parallel configuration for debugging"""
-    if mpi and mpi > 1:
-        print(f"Using MPI with {mpi} workers")
-        return {
-            "parallel": True,
-            "par_kw": {
-                "max_workers": mpi,
-                "use_mpi": True,
-                "chunksize": 1  # Added for debugging
-            }
-        }
-    elif num_processes and num_processes > 1:
-        print(f"Using multiprocessing with {num_processes} workers")
-        return {
-            "parallel": True,
-            "par_kw": {
-                "max_workers": num_processes,
-                "use_mpi": False,
-                "chunksize": 1  # Added for debugging
-            }
-        }
-    print("Running sequentially (no parallelization)")
-    return {"parallel": False, "par_kw": {}}
-
-
 # def configure_parallel(parallel: bool, mpi: int, num_processes: int) -> dict:
+#     """Simplified parallel configuration for debugging"""
 #     if mpi and mpi > 1:
+#         print(f"Using MPI with {mpi} workers")
 #         return {
-#             "parallel": False,  # Force single-process mode
+#             "parallel": True,
 #             "par_kw": {
-#                 "max_workers": 1,  # No parallel workers
-#                 "use_mpi": False,
-#                 "chunksize": 1
+#                 "max_workers": mpi,
+#                 "use_mpi": True,
+#                 "chunksize": 1  # Added for debugging
 #             }
 #         }
+#     elif num_processes and num_processes > 1:
+#         print(f"Using multiprocessing with {num_processes} workers")
+#         return {
+#             "parallel": True,
+#             "par_kw": {
+#                 "max_workers": num_processes,
+#                 "use_mpi": False,
+#                 "chunksize": 1  # Added for debugging
+#             }
+#         }
+#     print("Running sequentially (no parallelization)")
 #     return {"parallel": False, "par_kw": {}}
+
+
+def configure_parallel(parallel: bool, mpi: int, num_processes: int) -> dict:
+    if mpi and mpi > 1:
+        return {
+            "parallel": False,  # Force single-process mode
+            "par_kw": {
+                "max_workers": 1,  # No parallel workers
+                "use_mpi": False,
+                "chunksize": 1
+            }
+        }
+    
+    return {"parallel": False, "par_kw": {}}
 
 def get_id(result):
     return result.source.unique_id
@@ -145,7 +146,7 @@ def main(input_path, num_processes, mpi, output_dir, limit, num_reps, force):
     clock_app = loader_json + toc_bootstrapper + write_json_app
 
     parallel_config = configure_parallel(
-        parallel=True, mpi=mpi, num_processes=num_processes
+        parallel=False, mpi=mpi, num_processes=num_processes
     )   
 
     print('started')
