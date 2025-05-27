@@ -11,53 +11,13 @@ from pathlib import Path
 import shutil
 import os
 
-
-# def configure_parallel(parallel: bool, mpi: int, num_processes: int) -> dict:
-#     """Simplified parallel configuration for debugging"""
-#     if mpi and mpi > 1:
-#         print(f"Using MPI with {mpi} workers")
-#         return {
-#             "parallel": True,
-#             "par_kw": {
-#                 "max_workers": mpi,
-#                 "use_mpi": True,
-#                 "chunksize": 1  # Added for debugging
-#             }
-#         }
-#     elif num_processes and num_processes > 1:
-#         print(f"Using multiprocessing with {num_processes} workers")
-#         return {
-#             "parallel": True,
-#             "par_kw": {
-#                 "max_workers": num_processes,
-#                 "use_mpi": False,
-#                 "chunksize": 1  # Added for debugging
-#             }
-#         }
-#     print("Running sequentially (no parallelization)")
-#     return {"parallel": False, "par_kw": {}}
-
-
 def configure_parallel(parallel: bool, mpi: int) -> dict:
-    if mpi and mpi > 1:
-        return {
-            "parallel": False,  # Force single-process mode
-            "par_kw": {
-                "max_workers": 1,  # No parallel workers
-                "use_mpi": False,
-                "chunksize": 1
-            }
-        }
-    
-    return {"parallel": False, "par_kw": {}}
+    """returns parallel configuration settings for use as composable.apply_to(**config)"""
+    mpi = None if mpi < 2 else mpi  # no point in MPI if < 2 processors
+    parallel = True if mpi else parallel
+    par_kw = dict(max_workers=mpi, use_mpi=True) if mpi else None
 
-# def configure_parallel(parallel: bool, mpi: int) -> dict:
-#     """returns parallel configuration settings for use as composable.apply_to(**config)"""
-#     mpi = None if mpi < 2 else mpi  # no point in MPI if < 2 processors
-#     parallel = True if mpi else parallel
-#     par_kw = dict(max_workers=mpi, use_mpi=True) if mpi else None
-
-#     return {"parallel": parallel, "par_kw": par_kw}
+    return {"parallel": parallel, "par_kw": par_kw}
 
 def get_id(result):
     return result.source.unique_id
@@ -118,13 +78,20 @@ _click_command_opts = {
     "--num_reps", "-r", type=int, default=100, help="Number of bootstrap replicates"
 )
 @click.option(
+    "-p",
+    "--parallel",
+    is_flag=True,
+    default=False,
+    help="run in parallel (on single machine)",
+)
+@click.option(
     "--force",
     is_flag=True,
     default=False,
     help="Force overwrite output directory by deleting existing content.",
 )
 
-def main(input_path, mpi, output_dir, limit, num_reps, force):
+def main(input_path, mpi, output_dir, limit, num_reps, parallel, force):
     if force and output_dir and os.path.exists(output_dir):
         shutil.rmtree(output_dir, ignore_errors=True)
 
@@ -139,7 +106,6 @@ def main(input_path, mpi, output_dir, limit, num_reps, force):
     toc_bootstrapper = test_hypothesis_clock_model(num_reps =  num_reps)
 
     out_dstore = open_data_store(output_dir, mode="w", suffix="json")
-   
 
     write_json_app = get_app("write_json", data_store=out_dstore, id_from_source=get_id)
 
@@ -148,7 +114,7 @@ def main(input_path, mpi, output_dir, limit, num_reps, force):
     clock_app = loader_json + toc_bootstrapper + write_json_app
 
     parallel_config = configure_parallel(
-        parallel=False, mpi=mpi,
+        parallel=parallel, mpi=mpi,
     )   
 
     print(parallel_config)
