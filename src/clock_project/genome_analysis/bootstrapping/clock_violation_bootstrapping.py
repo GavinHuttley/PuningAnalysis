@@ -115,7 +115,7 @@ def main(input_path, num_processes, mpi, output_dir, limit, num_reps, force):
 
     write_json_app = get_app("write_json", data_store=out_dstore, id_from_source=get_id)
 
-    input_data_store = open_data_store(input_path)
+    input_data_store = open_data_store(input_path, suffix="json")
 
     clock_app = loader_json + toc_bootstrapper + write_json_app
 
