@@ -12,17 +12,29 @@ import os
 
 
 def configure_parallel(parallel: bool, mpi: int, num_processes: int) -> dict:
-    mpi = None if mpi < 2 else mpi
-    parallel = True if mpi else parallel
-    par_kw = (
-        dict(max_workers=mpi, use_mpi=True)
-        if mpi
-        else dict(max_workers=num_processes, use_mpi=False)
-    )
-    return {"parallel": parallel, "par_kw": par_kw}
-
-
-RATE_PARAM_UPPER = 50
+    """Simplified parallel configuration for debugging"""
+    if mpi and mpi > 1:
+        print(f"Using MPI with {mpi} workers")
+        return {
+            "parallel": True,
+            "par_kw": {
+                "max_workers": mpi,
+                "use_mpi": True,
+                "chunksize": 1  # Added for debugging
+            }
+        }
+    elif num_processes and num_processes > 1:
+        print(f"Using multiprocessing with {num_processes} workers")
+        return {
+            "parallel": True,
+            "par_kw": {
+                "max_workers": num_processes,
+                "use_mpi": False,
+                "chunksize": 1  # Added for debugging
+            }
+        }
+    print("Running sequentially (no parallelization)")
+    return {"parallel": False, "par_kw": {}}
 
 
 def get_id(result):
