@@ -2,7 +2,6 @@ import os
 import json
 import pandas as pd
 from cogent3 import get_app, open_data_store
-from cogent3.app import io as io_app
 
 
 
@@ -14,7 +13,7 @@ def read_json(file_path):
     with open(file_path, 'r') as file:
         return json.load(file)
 
-def sample_triples(info_path, align_path, sample_fraction, writer):
+def sample_triples(info_path, align_path, sample_fraction, write_json_app):
     sampling_interval = int(1 / sample_fraction)
 
     info_data = read_json(info_path)
@@ -43,23 +42,24 @@ def sample_triples(info_path, align_path, sample_fraction, writer):
         src_file = os.path.join(align_path, f"{identifier}.fa")
         aln = loader_aligned(src_file)
         aln.info['triples_species_name'] = triples_species_name
-        writer(aln, identifier = f"{gene_name}_{identifier}.fa")
+        write_json_app(aln, identifier=f"{gene_name}_{identifier}.json")
+
             
 
 def main():
     info_dir = '/Users/gulugulu/clock/mammal_orthologs_hsap_1/triples_model_fitting'
     align_dir = '/Users/gulugulu/clock/mammal_orthologs_hsap_1/taxanomic_triples_alignments'
-    output_dir = '/Users/gulugulu/clock/mammal_orthologs_hsap_1/triples_representative_subset.sqlitedb'
+    output_dir = '/Users/gulugulu/clock/mammal_orthologs_hsap_1/triples_representative_subset_json'
     sample_fraction = 0.1
 
-    out_dstore = open_data_store(output_dir, mode="w")
-    writer = io_app.write_db(data_store=out_dstore)
+    out_dstore = open_data_store(output_dir, mode="w", suffix='json')
+    write_json_app = get_app("write_json", data_store=out_dstore)
 
     for gene_name in os.listdir(info_dir):
         info_path = os.path.join(info_dir, gene_name, 'triples_info_dict_new.json')
         align_path = os.path.join(align_dir, gene_name)
         if os.path.exists(info_path) and os.path.isdir(align_path):
-            sample_triples(info_path, align_path, sample_fraction, writer)
+            sample_triples(info_path, align_path, sample_fraction, write_json_app)
 
 if __name__ == "__main__":
     main()
