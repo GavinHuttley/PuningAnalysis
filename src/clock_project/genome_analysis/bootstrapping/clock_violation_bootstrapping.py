@@ -38,7 +38,7 @@ import os
 #     return {"parallel": False, "par_kw": {}}
 
 
-def configure_parallel(parallel: bool, mpi: int, num_processes: int) -> dict:
+def configure_parallel(parallel: bool, mpi: int) -> dict:
     if mpi and mpi > 1:
         return {
             "parallel": False,  # Force single-process mode
@@ -50,6 +50,14 @@ def configure_parallel(parallel: bool, mpi: int, num_processes: int) -> dict:
         }
     
     return {"parallel": False, "par_kw": {}}
+
+# def configure_parallel(parallel: bool, mpi: int) -> dict:
+#     """returns parallel configuration settings for use as composable.apply_to(**config)"""
+#     mpi = None if mpi < 2 else mpi  # no point in MPI if < 2 processors
+#     parallel = True if mpi else parallel
+#     par_kw = dict(max_workers=mpi, use_mpi=True) if mpi else None
+
+#     return {"parallel": parallel, "par_kw": par_kw}
 
 def get_id(result):
     return result.source.unique_id
@@ -103,12 +111,6 @@ _click_command_opts = {
 
 @click.command(**_click_command_opts)
 @click.argument("input_path", type=click.Path(exists=True))
-@click.option(
-    "--num_processes",
-    "-n",
-    type=int,
-    help="Number of processes to use (default: number of CPUs)",
-)
 @click.option("--mpi", "-m", type=int, default=0, help="Number of MPI processes to use")
 @click.option("--output_dir", "-o", type=click.Path(), help="Output directory")
 @click.option("--limit", "-l", type=int, help="limit for number of files")
@@ -122,7 +124,7 @@ _click_command_opts = {
     help="Force overwrite output directory by deleting existing content.",
 )
 
-def main(input_path, num_processes, mpi, output_dir, limit, num_reps, force):
+def main(input_path, mpi, output_dir, limit, num_reps, force):
     if force and output_dir and os.path.exists(output_dir):
         shutil.rmtree(output_dir, ignore_errors=True)
 
@@ -146,8 +148,10 @@ def main(input_path, num_processes, mpi, output_dir, limit, num_reps, force):
     clock_app = loader_json + toc_bootstrapper + write_json_app
 
     parallel_config = configure_parallel(
-        parallel=False, mpi=mpi, num_processes=num_processes
+        parallel=False, mpi=mpi,
     )   
+
+    print(parallel_config)
 
     print('started')
     clock_app.apply_to(
