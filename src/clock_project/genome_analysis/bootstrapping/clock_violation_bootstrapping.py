@@ -6,10 +6,10 @@ from cogent3.app.typing import AlignedSeqsType, SerialisableType
 from cogent3.app import evo
 import click
 from scitrack import CachingLogger
-import uuid
-from pathlib import Path
-import shutil
-import os
+# import uuid
+# from pathlib import Path
+# import shutil
+# import os
 
 def configure_parallel(parallel: bool, mpi: int) -> dict:
     """returns parallel configuration settings for use as composable.apply_to(**config)"""
@@ -72,7 +72,7 @@ _click_command_opts = {
 @click.command(**_click_command_opts)
 @click.argument("input_path", type=click.Path(exists=True))
 @click.option("--mpi", "-m", type=int, default=0, help="Number of MPI processes to use")
-@click.option("--output_dir", "-o", type=click.Path(), help="Output directory")
+@click.option("--output_dstore", "-o", type=click.Path(), help="Output directory")
 @click.option("--limit", "-l", type=int, help="limit for number of files")
 @click.option(
     "--num_reps", "-r", type=int, default=100, help="Number of bootstrap replicates"
@@ -84,20 +84,19 @@ _click_command_opts = {
     default=False,
     help="run in parallel (on single machine)",
 )
-@click.option(
-    "--force",
-    is_flag=True,
-    default=False,
-    help="Force overwrite output directory by deleting existing content.",
-)
+# @click.option(
+#     "--force",
+#     is_flag=True,
+#     default=False,
+#     help="Force overwrite output directory by deleting existing content.",
+# )
 
-def main(input_path, mpi, output_dir, limit, num_reps, parallel, force):
-    if force and output_dir and os.path.exists(output_dir):
-        shutil.rmtree(output_dir, ignore_errors=True)
+def main(input_path, mpi, output_dstore, limit, num_reps, parallel):
+    # if force and output_dir and os.path.exists(output_dir):
+    #     shutil.rmtree(output_dir, ignore_errors=True)
 
-    outpath = Path(output_dir) / f"{uuid.uuid4().hex}.log"
 
-    LOGGER = CachingLogger(log_file_path=outpath, create_dir=True)
+    LOGGER = CachingLogger(create_dir=True)
     LOGGER.log_args()
     LOGGER.log_versions("numpy")
     LOGGER.log_versions("cogent3")
@@ -105,7 +104,7 @@ def main(input_path, mpi, output_dir, limit, num_reps, parallel, force):
 
     toc_bootstrapper = test_hypothesis_clock_model(num_reps =  num_reps)
 
-    out_dstore = open_data_store(output_dir, mode="w", suffix="json")
+    out_dstore = open_data_store(output_dstore, mode="w", suffix="json")
 
     write_json_app = get_app("write_json", data_store=out_dstore, id_from_source=get_id)
 
