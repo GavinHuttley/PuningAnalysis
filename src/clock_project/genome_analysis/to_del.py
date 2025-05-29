@@ -7,17 +7,28 @@ import uuid
 from pathlib import Path
 from cogent3.app import evo
 # import shutil
-# import os
+import os
 
 load_json_app = get_app("load_json")
 
-def configure_parallel(parallel: bool, mpi: int) -> dict:
-    """returns parallel configuration settings for use as composable.apply_to(**config)"""
-    mpi = None if mpi < 2 else mpi  # no point in MPI if < 2 processors
-    parallel = True if mpi else parallel
-    par_kw = dict(max_workers=mpi, use_mpi=True) if mpi else None
+def configure_parallel(parallel: bool, mpi: int | None) -> dict:
+    """Safely configure cogent3 parallel settings for MPI or multiprocessing."""
 
-    return {"parallel": parallel, "par_kw": par_kw}
+    # Auto-detect MPI from environment if --mpi not explicitly set
+    if mpi is None:
+        mpi = int(os.environ.get("OMPI_COMM_WORLD_SIZE", "1"))
+
+    if mpi >= 2:
+        # Assume launched with `mpirun -n <mpi>` or --mpi=<n>
+        return {"parallel": True, "par_kw": {"use_mpi": True}}
+    elif parallel:
+        # Use local multiprocessing with specified number of workers
+        return {"parallel": True, "par_kw": {"max_workers": 1, "use_mpi": False}}
+    else:
+        # Serial execution
+        return {"parallel": False, "par_kw": None}
+
+
 
 def get_id(result):
     return result.source.unique_id
@@ -56,7 +67,13 @@ _click_command_opts = {
 
 @click.command(**_click_command_opts)
 @click.argument("input_path", type=click.Path(exists=True))
-@click.option("--mpi", "-m", type=int, default=0, help="Number of MPI processes to use")
+@click.option(
+    "--mpi",
+    "-m",
+    type=int,
+    default=None,  # Allow None so we can auto-detect if not provided
+    help="Number of MPI processes (set automatically if using mpirun)."
+)
 @click.option("--output_dir", "-o", type=click.Path(), help="Output directory")
 @click.option("--limit", "-l", type=int, help="limit for number of files")
 @click.option(
