@@ -31,9 +31,9 @@ def get_param_rules_upper_limit(model_name, upper):
     return [{"par_name": par_name, "upper": upper} for par_name in sm.get_param_list()]
 
 
-@define_app
 def test_hypothesis_clock_model(tree=None, opt_args=None, num_reps=100):
-    def make_app(aln: AlignedSeqsType) -> SerialisableType:
+    @define_app
+    def clock_model(aln: AlignedSeqsType) -> SerialisableType:
         outgroup_name = aln.info["triples_species_name"]["outgroup"]
         tree = make_tree(tip_names=aln.names)
         sp1 = aln.info["triples_species_name"]["ingroup1"]
@@ -58,7 +58,7 @@ def test_hypothesis_clock_model(tree=None, opt_args=None, num_reps=100):
         bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=False)
         result = bootstrapper(aln)
         return result
-    return make_app
+    return clock_model
 
 loader_json = get_app("load_json")
 
