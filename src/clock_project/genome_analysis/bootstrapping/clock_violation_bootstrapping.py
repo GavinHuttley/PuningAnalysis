@@ -55,7 +55,7 @@ def test_hypothesis_clock_model(tree=None, opt_args=None, num_reps=100):
         )
         alt = get_app("model", "GN", name="no-clock", **model_kwargs)
         hyp = get_app("hypothesis", null, alt)
-        bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=False)
+        bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=True)
         result = bootstrapper(aln)
         return result
     return clock_model
@@ -104,7 +104,7 @@ def main(input_path, mpi, output_dir, limit, num_reps, parallel, force):
     LOGGER.log_versions("cogent3")
     LOGGER.log_versions("clock_project")
 
-    toc_bootstrapper = test_hypothesis_clock_model(num_reps=num_reps)
+    toc_bootstrapper = test_hypothesis_clock_model(num_reps=num_reps)()
 
     out_dstore = open_data_store(output_dir, mode="w", suffix="json")
 
@@ -117,8 +117,6 @@ def main(input_path, mpi, output_dir, limit, num_reps, parallel, force):
     parallel_config = configure_parallel(
         parallel=parallel, mpi=mpi,
     )   
-
-    print(parallel_config)
 
     print('started')
     clock_app.apply_to(
