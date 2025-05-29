@@ -1,10 +1,13 @@
 import click
-from cogent3 import get_app, open_data_store
+from cogent3 import make_tree, get_app, open_data_store
 from cogent3.app.composable import define_app
 from cogent3.app.typing import AlignedSeqsType, SerialisableType
 from scitrack import CachingLogger
 import uuid
 from pathlib import Path
+from cogent3.app import evo
+# import shutil
+# import os
 
 load_json_app = get_app("load_json")
 
@@ -16,9 +19,35 @@ def configure_parallel(parallel: bool, mpi: int) -> dict:
 
     return {"parallel": parallel, "par_kw": par_kw}
 
+def get_id(result):
+    return result.source.unique_id
+
 @define_app
-def dummy_processor(data: AlignedSeqsType)  -> SerialisableType:  # add dummy parameter here
-    return data
+def test_hypothesis_clock_model(aln: AlignedSeqsType, tree=None, opt_args=None, num_reps=10) -> SerialisableType:
+    outgroup_name = aln.info["triples_species_name"]["outgroup"]
+    tree = make_tree(tip_names=aln.names)
+    sp1 = aln.info["triples_species_name"]["ingroup1"]
+    sp2 = aln.info["triples_species_name"]["ingroup2"]
+    outgroup_edge = [outgroup_name]
+
+    model_kwargs = dict(
+        tree=tree,
+        opt_args=opt_args,
+        lf_args=dict(discrete_edges=[outgroup_edge]),
+        optimise_motif_probs=True,
+    )
+    null = get_app(
+        "model",
+        "GN",
+        name="clock",
+        param_rules=[dict(par_name="length", edges=[sp1, sp2], is_independent=False)],
+        **model_kwargs,
+    )
+    alt = get_app("model", "GN", name="no-clock", **model_kwargs)
+    hyp = get_app("hypothesis", null, alt)
+    bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=False)
+    result = bootstrapper(aln)
+    return result
 
 _click_command_opts = {
     "no_args_is_help": True,
@@ -30,7 +59,9 @@ _click_command_opts = {
 @click.option("--mpi", "-m", type=int, default=0, help="Number of MPI processes to use")
 @click.option("--output_dir", "-o", type=click.Path(), help="Output directory")
 @click.option("--limit", "-l", type=int, help="limit for number of files")
-
+@click.option(
+    "--num_reps", "-r", type=int, default=100, help="Number of bootstrap replicates"
+)
 @click.option(
     "-p",
     "--parallel",
@@ -39,7 +70,16 @@ _click_command_opts = {
     help="run in parallel (on single machine)",
 )
 
-def main(input_path, output_dir, mpi, limit, parallel):
+# @click.option(
+#     "--force",
+#     is_flag=True,
+#     default=False,
+#     help="Force overwrite output directory by deleting existing content.",
+# )
+
+def main(input_path, output_dir, mpi, limit,num_reps, parallel):
+    # if force and output_dir and os.path.exists(output_dir):
+    #     shutil.rmtree(output_dir, ignore_errors=True)
 
     output_dir = Path(output_dir)
     outpath = output_dir / f"{uuid.uuid4().hex}.log"
@@ -56,9 +96,9 @@ def main(input_path, output_dir, mpi, limit, parallel):
     
 
     writer = get_app("write_json", 
-                   data_store=open_data_store(output_dir, mode="w", suffix="json"))
+                   data_store=open_data_store(output_dir, mode="w", suffix="json"), id_from_source=get_id)
     
-    pipeline = loader + dummy_processor() + writer
+    pipeline = loader + test_hypothesis_clock_model(num_reps = num_reps) + writer
 
     parallel_config = configure_parallel(parallel=parallel, mpi=mpi)
 
@@ -67,10 +107,12 @@ def main(input_path, output_dir, mpi, limit, parallel):
     pipeline.apply_to(
         input_dstore[0:limit],
         show_progress=True,
+        cleanup=True,
+        logger=LOGGER,
         **parallel_config
     )
 
-    click.echo("Completed minimal MPI test")
+    click.echo("Completed edited minimal MPI test")
 
 if __name__ == "__main__":
     main()
