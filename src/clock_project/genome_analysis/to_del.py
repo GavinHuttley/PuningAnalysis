@@ -11,24 +11,13 @@ import os
 from cogent3.util import parallel
 
 
-
-
-# import math
-# import os
-# import time
-# from collections import Counter
-# import cogent3
-# import click
-# from cogent3.app.composable import NotCompleted
-
-
-def configure_parallel(parallel: bool, PBS_NCPUS) -> dict:
+def configure_parallel(parallel_option: bool, PBS_NCPUS: int) -> dict:
     """returns parallel configuration settings for use as composable.apply_to(**config)"""
     mpi = None if PBS_NCPUS-1 < 2 else PBS_NCPUS-1  # no point in MPI if < 2 processors
-    parallel = True if mpi else parallel
+    parallel_option = True if mpi else parallel_option
     par_kw = dict(max_workers=mpi, use_mpi=True) if mpi else None
 
-    return {"parallel": parallel, "par_kw": par_kw}
+    return {"parallel": parallel_option, "par_kw": par_kw}
 
 def get_id(result):
     return result.source.unique_id
@@ -56,7 +45,7 @@ def test_hypothesis_clock_model(aln: AlignedSeqsType, tree=None, opt_args=None, 
     )
     alt = get_app("model", "GN", name="no-clock", **model_kwargs)
     hyp = get_app("hypothesis", null, alt)
-    bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=False)
+    bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=True)
     result = bootstrapper(aln)
     return result
 
@@ -122,8 +111,8 @@ def main(input_path, output_dir, limit,num_reps, parallel_option, force):
     pipeline = loader + test_hypothesis_clock_model(num_reps = num_reps) + writer
 
     parallel_config = configure_parallel(
-        parallel=parallel_option, 
-        PBS_NCPUS=PBS_NCPUS
+        parallel_option=parallel_option, 
+        PBS_NCPUS = PBS_NCPUS
     )
 
     # Apply to data
