@@ -20,7 +20,6 @@ def configure_parallel(parallel: bool, mpi: int) -> dict:
     return {"parallel": parallel, "par_kw": par_kw}
 
 
-
 def get_id(result):
     return result.source.unique_id
 

@@ -31,34 +31,33 @@ def get_param_rules_upper_limit(model_name, upper):
     return [{"par_name": par_name, "upper": upper} for par_name in sm.get_param_list()]
 
 
-def test_hypothesis_clock_model(tree=None, opt_args=None, num_reps=100):
-    @define_app
-    def clock_model(aln: AlignedSeqsType) -> SerialisableType:
-        outgroup_name = aln.info["triples_species_name"]["outgroup"]
-        tree = make_tree(tip_names=aln.names)
-        sp1 = aln.info["triples_species_name"]["ingroup1"]
-        sp2 = aln.info["triples_species_name"]["ingroup2"]
-        outgroup_edge = [outgroup_name]
 
-        model_kwargs = dict(
-            tree=tree,
-            opt_args=opt_args,
-            lf_args=dict(discrete_edges=[outgroup_edge]),
-            optimise_motif_probs=True,
-        )
-        null = get_app(
-            "model",
-            "GN",
-            name="clock",
-            param_rules=[dict(par_name="length", edges=[sp1, sp2], is_independent=False)],
-            **model_kwargs,
-        )
-        alt = get_app("model", "GN", name="no-clock", **model_kwargs)
-        hyp = get_app("hypothesis", null, alt)
-        bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=True)
-        result = bootstrapper(aln)
-        return result
-    return clock_model
+@define_app
+def test_hypothesis_clock_model(aln: AlignedSeqsType, tree=None, opt_args=None, num_reps=100) -> SerialisableType:
+    outgroup_name = aln.info["triples_species_name"]["outgroup"]
+    tree = make_tree(tip_names=aln.names)
+    sp1 = aln.info["triples_species_name"]["ingroup1"]
+    sp2 = aln.info["triples_species_name"]["ingroup2"]
+    outgroup_edge = [outgroup_name]
+
+    model_kwargs = dict(
+        tree=tree,
+        opt_args=opt_args,
+        lf_args=dict(discrete_edges=[outgroup_edge]),
+        optimise_motif_probs=True,
+    )
+    null = get_app(
+        "model",
+        "GN",
+        name="clock",
+        param_rules=[dict(par_name="length", edges=[sp1, sp2], is_independent=False)],
+        **model_kwargs,
+    )
+    alt = get_app("model", "GN", name="no-clock", **model_kwargs)
+    hyp = get_app("hypothesis", null, alt)
+    bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=True)
+    result = bootstrapper(aln)
+    return result
 
 loader_json = get_app("load_json")
 
@@ -104,7 +103,7 @@ def main(input_path, mpi, output_dir, limit, num_reps, parallel, force):
     LOGGER.log_versions("cogent3")
     LOGGER.log_versions("clock_project")
 
-    toc_bootstrapper = test_hypothesis_clock_model(num_reps=num_reps)()
+    toc_bootstrapper = test_hypothesis_clock_model(num_reps=num_reps)
 
     out_dstore = open_data_store(output_dir, mode="w", suffix="json")
 
