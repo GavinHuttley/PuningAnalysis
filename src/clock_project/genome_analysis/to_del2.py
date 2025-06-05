@@ -1,8 +1,6 @@
 
 import os
-import time
 import uuid
-from collections import Counter
 from pathlib import Path
 from cogent3.app import evo
 import click
@@ -52,7 +50,7 @@ def test_hypothesis_clock_model(
 
 @click.command(no_args_is_help=True, context_settings={"show_default": True})
 @click.argument("input_path", type=click.Path(exists=True, file_okay=False))
-@click.argument("output_dir", type=click.Path())
+@click.option("--output_dir", "-o", type=click.Path(), help="Output directory")
 @click.option(
     "--limit", "-l", type=int, default=None, help="Limit number of files to process."
 )
@@ -98,29 +96,12 @@ def main(input_path, output_dir, limit, num_reps, force):
         LOGGER.log_versions("cogent3")
         LOGGER.log_versions("clock_project")
 
-    # 3) Determine how many MPI ranks / “workers” we have
-    #    PBS_NCPUS is the number of ranks you requested via “mpirun -n $PBS_NCPUS”
     PBS_NCPUS = int(os.environ.get("PBS_NCPUS", "1"))
-    world_size = parallel.SIZE  # number of MPI ranks in COMM_WORLD
-    my_rank = parallel.get_rank()
 
-    if world_size != PBS_NCPUS:
-        # It’s common for users to do “mpirun -n 8” and have PBS_NCPUS=8,
-        # but just in case they mismatch, warn:
-        print(
-            f"[Rank {my_rank}] Warning: PBS_NCPUS={PBS_NCPUS} != parallel.SIZE={world_size}"
-        )
-
-    if my_rank == 0:
-        print(f"[Rank 0] Running with {world_size} MPI ranks, PBS_NCPUS={PBS_NCPUS}")
-
-    # 4) Build the Cogent3 apps we need:
     loader = get_app("load_json")
     writer = get_app("write_json", 
                    data_store=open_data_store(output_dir, mode="w", suffix="json"), id_from_source=get_id)
     
-
-
     all_items = list(open_data_store(input_path, suffix="json"))
     if limit is not None:
         all_items = all_items[:limit]
