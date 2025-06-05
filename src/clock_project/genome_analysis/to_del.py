@@ -118,7 +118,7 @@ def main(input_path, output_dir, limit,num_reps, parallel_option, force):
                    data_store=open_data_store(output_dir, mode="w", suffix="json"), id_from_source=get_id)
     
     # pipeline = loader + test_hypothesis_clock_model(num_reps = num_reps) + writer
-    pipeline = loader + minimal_test + writer
+    pipeline = loader + minimal_test() + writer
 
 
     parallel_config = configure_parallel(
