@@ -43,7 +43,7 @@ def test_hypothesis_clock_model(
     alt = get_app("model", "GN", name="no-clock", **model_kwargs)
     hyp = get_app("hypothesis", null, alt)
 
-    bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=True)
+    bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=False)
     result = bootstrapper(aln)
     return result
 
