@@ -6,19 +6,29 @@ from scitrack import CachingLogger
 import uuid
 from pathlib import Path
 from cogent3.app import evo
-# import shutil
+import shutil
 import os
+from cogent3.util import parallel
 
-load_json_app = get_app("load_json")
 
-def configure_parallel(parallel: bool, mpi: int) -> dict:
+
+
+# import math
+# import os
+# import time
+# from collections import Counter
+# import cogent3
+# import click
+# from cogent3.app.composable import NotCompleted
+
+
+def configure_parallel(parallel: bool, PBS_NCPUS) -> dict:
     """returns parallel configuration settings for use as composable.apply_to(**config)"""
-    mpi = None if mpi < 2 else mpi  # no point in MPI if < 2 processors
+    mpi = None if PBS_NCPUS < 2 else PBS_NCPUS  # no point in MPI if < 2 processors
     parallel = True if mpi else parallel
     par_kw = dict(max_workers=mpi, use_mpi=True) if mpi else None
 
     return {"parallel": parallel, "par_kw": par_kw}
-
 
 def get_id(result):
     return result.source.unique_id
@@ -57,13 +67,6 @@ _click_command_opts = {
 
 @click.command(**_click_command_opts)
 @click.argument("input_path", type=click.Path(exists=True))
-@click.option(
-    "--mpi",
-    "-m",
-    type=int,
-    default=None,  # Allow None so we can auto-detect if not provided
-    help="Number of MPI processes (set automatically if using mpirun)."
-)
 @click.option("--output_dir", "-o", type=click.Path(), help="Output directory")
 @click.option("--limit", "-l", type=int, help="limit for number of files")
 @click.option(
@@ -71,24 +74,29 @@ _click_command_opts = {
 )
 @click.option(
     "-p",
-    "--parallel",
+    "--parallel_option",
     is_flag=True,
     default=False,
     help="run in parallel (on single machine)",
 )
 
-# @click.option(
-#     "--force",
-#     is_flag=True,
-#     default=False,
-#     help="Force overwrite output directory by deleting existing content.",
-# )
+@click.option(
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force overwrite output directory by deleting existing content.",
+)
 
-def main(input_path, output_dir, mpi, limit,num_reps, parallel):
-    # if force and output_dir and os.path.exists(output_dir):
-    #     shutil.rmtree(output_dir, ignore_errors=True)
-
+def main(input_path, output_dir, limit,num_reps, parallel_option, force):
+    # Convert to Path right away
     output_dir = Path(output_dir)
+
+    if force and output_dir.exists():
+        shutil.rmtree(output_dir, ignore_errors=True)
+
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True, exist_ok=True)
+
     outpath = output_dir / f"{uuid.uuid4().hex}.log"
 
     LOGGER = CachingLogger(log_file_path=outpath, create_dir=True)
@@ -98,6 +106,12 @@ def main(input_path, output_dir, mpi, limit,num_reps, parallel):
     LOGGER.log_versions("clock_project")
     # Configure parallel processing
 
+    # the following environment variable is created by PBS on job execution
+    PBS_NCPUS = int(os.environ.get("PBS_NCPUS", "1"))
+    PBS_NCPUS = int(PBS_NCPUS)
+    print(PBS_NCPUS)
+
+    print(f"{parallel.is_master_process()}")
     # Build minimal pipeline
     loader = get_app("load_json")
     
@@ -107,7 +121,10 @@ def main(input_path, output_dir, mpi, limit,num_reps, parallel):
     
     pipeline = loader + test_hypothesis_clock_model(num_reps = num_reps) + writer
 
-    parallel_config = configure_parallel(parallel=parallel, mpi=mpi)
+    parallel_config = configure_parallel(
+        parallel=parallel_option, 
+        PBS_NCPUS=PBS_NCPUS
+    )
 
     # Apply to data
     input_dstore = open_data_store(input_path, suffix="json")
@@ -119,7 +136,8 @@ def main(input_path, output_dir, mpi, limit,num_reps, parallel):
         **parallel_config
     )
 
-    click.echo("Completed edited minimal MPI test")
+    click.echo("Completed edited clock_bootstrape test")
 
 if __name__ == "__main__":
     main()
+
