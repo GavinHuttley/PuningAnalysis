@@ -77,6 +77,9 @@ _click_command_opts = {
 )
 
 def main(input_path, output_dir, limit,num_reps, parallel_option, force):
+
+    print(f"{parallel.is_master_process()}")
+
     # Convert to Path right away
     output_dir = Path(output_dir)
 
@@ -100,7 +103,6 @@ def main(input_path, output_dir, limit,num_reps, parallel_option, force):
     PBS_NCPUS = int(PBS_NCPUS)
     print(PBS_NCPUS)
 
-    print(f"{parallel.is_master_process()}")
     # Build minimal pipeline
     loader = get_app("load_json")
     
