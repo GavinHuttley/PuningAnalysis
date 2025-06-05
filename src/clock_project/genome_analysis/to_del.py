@@ -22,32 +22,39 @@ def configure_parallel(parallel_option: bool, PBS_NCPUS: int) -> dict:
 def get_id(result):
     return result.source.unique_id
 
-@define_app
-def test_hypothesis_clock_model(aln: AlignedSeqsType, tree=None, opt_args=None, num_reps=10) -> SerialisableType:
-    outgroup_name = aln.info["triples_species_name"]["outgroup"]
-    tree = make_tree(tip_names=aln.names)
-    sp1 = aln.info["triples_species_name"]["ingroup1"]
-    sp2 = aln.info["triples_species_name"]["ingroup2"]
-    outgroup_edge = [outgroup_name]
+# @define_app
+# def test_hypothesis_clock_model(aln: AlignedSeqsType, tree=None, opt_args=None, num_reps=10) -> SerialisableType:
+#     outgroup_name = aln.info["triples_species_name"]["outgroup"]
+#     tree = make_tree(tip_names=aln.names)
+#     sp1 = aln.info["triples_species_name"]["ingroup1"]
+#     sp2 = aln.info["triples_species_name"]["ingroup2"]
+#     outgroup_edge = [outgroup_name]
 
-    model_kwargs = dict(
-        tree=tree,
-        opt_args=opt_args,
-        lf_args=dict(discrete_edges=[outgroup_edge]),
-        optimise_motif_probs=True,
-    )
-    null = get_app(
-        "model",
-        "GN",
-        name="clock",
-        param_rules=[dict(par_name="length", edges=[sp1, sp2], is_independent=False)],
-        **model_kwargs,
-    )
-    alt = get_app("model", "GN", name="no-clock", **model_kwargs)
-    hyp = get_app("hypothesis", null, alt)
-    bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=True)
-    result = bootstrapper(aln)
-    return result
+#     model_kwargs = dict(
+#         tree=tree,
+#         opt_args=opt_args,
+#         lf_args=dict(discrete_edges=[outgroup_edge]),
+#         optimise_motif_probs=True,
+#     )
+#     null = get_app(
+#         "model",
+#         "GN",
+#         name="clock",
+#         param_rules=[dict(par_name="length", edges=[sp1, sp2], is_independent=False)],
+#         **model_kwargs,
+#     )
+#     alt = get_app("model", "GN", name="no-clock", **model_kwargs)
+#     hyp = get_app("hypothesis", null, alt)
+#     bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=True)
+#     result = bootstrapper(aln)
+#     return result
+
+@define_app
+def minimal_test(aln: AlignedSeqsType) -> SerialisableType:
+    """A minimal test app that returns the input alignment."""
+    # This is a placeholder for the actual analysis you want to perform
+    return aln
+
 
 _click_command_opts = {
     "no_args_is_help": True,
@@ -110,7 +117,9 @@ def main(input_path, output_dir, limit,num_reps, parallel_option, force):
     writer = get_app("write_json", 
                    data_store=open_data_store(output_dir, mode="w", suffix="json"), id_from_source=get_id)
     
-    pipeline = loader + test_hypothesis_clock_model(num_reps = num_reps) + writer
+    # pipeline = loader + test_hypothesis_clock_model(num_reps = num_reps) + writer
+    pipeline = loader + minimal_test + writer
+
 
     parallel_config = configure_parallel(
         parallel_option=parallel_option, 
@@ -122,7 +131,6 @@ def main(input_path, output_dir, limit,num_reps, parallel_option, force):
     pipeline.apply_to(
         input_dstore[0:limit],
         show_progress=True,
-        cleanup=True,
         logger=LOGGER,
         **parallel_config
     )
