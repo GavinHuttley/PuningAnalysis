@@ -24,7 +24,7 @@ from cogent3.util import parallel
 
 def configure_parallel(parallel: bool, PBS_NCPUS) -> dict:
     """returns parallel configuration settings for use as composable.apply_to(**config)"""
-    mpi = None if PBS_NCPUS < 2 else PBS_NCPUS  # no point in MPI if < 2 processors
+    mpi = None if PBS_NCPUS-1 < 2 else PBS_NCPUS-1  # no point in MPI if < 2 processors
     parallel = True if mpi else parallel
     par_kw = dict(max_workers=mpi, use_mpi=True) if mpi else None
 
