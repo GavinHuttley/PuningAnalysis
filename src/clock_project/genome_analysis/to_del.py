@@ -68,6 +68,7 @@ _click_command_opts = {
 @click.option(
     "--num_reps", "-r", type=int, default=100, help="Number of bootstrap replicates"
 )
+@click.option("--mpi", "-m", type=int, default=0, help="Number of MPI processes to use")
 @click.option(
     "-p",
     "--parallel_option",
@@ -83,7 +84,7 @@ _click_command_opts = {
     help="Force overwrite output directory by deleting existing content.",
 )
 
-def main(input_path, output_dir, limit, num_reps, parallel_option, force):
+def main(input_path, output_dir, limit, num_reps, mpi, parallel_option, force):
 
     print(f"{parallel.is_master_process()}")
 
@@ -105,11 +106,6 @@ def main(input_path, output_dir, limit, num_reps, parallel_option, force):
     LOGGER.log_versions("clock_project")
     # Configure parallel processing
 
-    # the following environment variable is created by PBS on job execution
-    PBS_NCPUS = int(os.environ.get("PBS_NCPUS", "1"))
-    PBS_NCPUS = int(PBS_NCPUS)
-    print(PBS_NCPUS)
-
     # Build minimal pipeline
     loader = get_app("load_json")
     
@@ -123,7 +119,7 @@ def main(input_path, output_dir, limit, num_reps, parallel_option, force):
 
     parallel_config = configure_parallel(
         parallel_option=parallel_option, 
-        PBS_NCPUS = PBS_NCPUS
+        PBS_NCPUS = mpi
     )
 
     # Apply to data
