@@ -3,27 +3,23 @@ from cogent3.evolve.ns_substitution_model import GeneralStationary
 from cogent3 import make_tree, get_app, open_data_store, get_moltype
 from cogent3.app.composable import define_app
 from cogent3.app.typing import AlignedSeqsType, SerialisableType
-from cogent3.app import io as io_app
 from scitrack import CachingLogger
 import uuid
 import click
 from cogent3.app import evo
 from pathlib import Path
+import shutil
 
 
-def configure_parallel(parallel: bool, mpi: int, num_processes: int) -> dict:
-    mpi = None if mpi < 2 else mpi
-    parallel = True if mpi else parallel
-    par_kw = (
-        dict(max_workers=mpi, use_mpi=True)
-        if mpi
-        else dict(max_workers=num_processes, use_mpi=False)
-    )
-    return {"parallel": parallel, "par_kw": par_kw}
+def configure_parallel(parallel_option: bool, PBS_NCPUS: int) -> dict:
+    """returns parallel configuration settings for use as composable.apply_to(**config)"""
+    mpi = None if PBS_NCPUS-1 < 2 else PBS_NCPUS-1  # no point in MPI if < 2 processors
+    parallel_option = True if mpi else parallel_option
+    par_kw = dict(max_workers=mpi, use_mpi=True) if mpi else None
+
+    return {"parallel": parallel_option, "par_kw": par_kw}
 
 RATE_PARAM_UPPER = 50
-
-loader_db = io_app.load_db()
 
 def get_id(result):
     return result.source.unique_id
@@ -69,7 +65,7 @@ def test_hypothesis_non_stationary_model(aln: AlignedSeqsType, num_reps = 100, t
         )
     
     hyp = evo.hypothesis(null, alt, sequential=True)
-    bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=True)
+    bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=False)
     result = bootstrapper(aln)    
     return result
 
@@ -81,20 +77,37 @@ _click_command_opts = {
 
 
 @click.command(**_click_command_opts)
-@click.argument("input_path", type=click.Path(exists=True))
-@click.option(
-    "--num_processes",
-    "-n",
-    type=int,
-    help="Number of processes to use (default: number of CPUs)",
-)
-@click.option("--mpi", "-m", type=int, default=0, help="Number of MPI processes to use")
-@click.option("--output_dir", "-o", type=click.Path(), help="Output directory")
+@click.argument("input_path", type=Path)
+@click.option("--output_dir", "-o", type=Path)
 @click.option("--limit", "-l", type=int, help="limit for number of files")
+@click.option("--mpi", "-m", type=int, default=0, help="Number of MPI processes to use")
 @click.option(
     "--num_reps", "-r", type=int, default=100, help="Number of bootstrap replicates"
 )
-def main(input_path, num_processes, mpi, output_dir, limit, num_reps):
+@click.option(
+    "-p",
+    "--parallel_option",
+    is_flag=True,
+    default=False,
+    help="run in parallel (on single machine)",
+)
+
+@click.option(
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force overwrite output directory by deleting existing content.",
+)
+
+def main(input_path, output_dir, mpi, limit, num_reps, parallel_option, force):
+
+    if force and output_dir.exists():
+        shutil.rmtree(output_dir, ignore_errors=True)
+
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+    outpath = output_dir / f"{uuid.uuid4().hex}.log"
     outpath = Path(output_dir) / f"{uuid.uuid4().hex}.log"
 
     LOGGER = CachingLogger(log_file_path=outpath, create_dir=True)
@@ -103,24 +116,23 @@ def main(input_path, num_processes, mpi, output_dir, limit, num_reps):
     LOGGER.log_versions("cogent3")
     LOGGER.log_versions("clock_project")
 
+    loader = get_app("load_json")
+    
 
-    ton_bootstrapper = test_hypothesis_non_stationary_model(num_reps =  num_reps)
+    writer = get_app("write_json", 
+                   data_store=open_data_store(output_dir, mode="w", suffix="json"), id_from_source=get_id)
 
-    out_dstore = open_data_store(output_dir, mode="w", suffix="json")
-    write_json_app = get_app("write_json", data_store=out_dstore, id_from_source=get_id)
+    input_dstore = open_data_store(input_path, suffix="json")
 
-    input_data_store = open_data_store(input_path)
-
-    app = loader_db + ton_bootstrapper + write_json_app
+    app = loader + test_hypothesis_non_stationary_model(num_reps =  num_reps) + writer
 
     parallel_config = configure_parallel(
-        parallel=True, num_processes=num_processes, mpi=mpi
+        parallel=parallel_option, PBS_NCPUS=mpi
     )
 
     app.apply_to(
-        input_data_store[0:limit],
+        input_dstore[0:limit],
         show_progress=True,
-        cleanup=True,
         logger=LOGGER,
         **parallel_config,
     )
