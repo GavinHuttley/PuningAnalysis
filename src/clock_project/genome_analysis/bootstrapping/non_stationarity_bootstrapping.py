@@ -127,7 +127,7 @@ def main(input_path, output_dir, mpi, limit, num_reps, parallel_option, force):
     app = loader + test_hypothesis_non_stationary_model(num_reps =  num_reps) + writer
 
     parallel_config = configure_parallel(
-        parallel=parallel_option, PBS_NCPUS=mpi
+        parallel_option=parallel_option, PBS_NCPUS=mpi
     )
 
     app.apply_to(
