@@ -1,0 +1,80 @@
+import pytest
+from cogent3 import open_data_store, get_app
+import numpy as np
+
+# Adjust this to point to your test bootstrap result file
+ton_result_path = '~/clock/mammal_orthologs_hsap_1/ton_test_to_del'
+
+loader_json = get_app('load_json')
+ton_result_dstore = open_data_store(ton_result_path, suffix = 'json')
+tabulate = get_app("tabulate_stats")
+
+
+@pytest.fixture(scope="module")
+def bootstrap_result():
+    """Load the bootstrap result"""
+    dstore = open_data_store(ton_result_path, suffix="json")
+    results = list(dstore)
+    assert len(results) > 0, "No bootstrap result files found"
+    return loader_json(results[0])
+
+def test_hypothesis_model_names(bootstrap_result):
+    """Test if the null and alt model names are correct"""
+    hyp_result = bootstrap_result
+
+    assert hasattr(hyp_result, "observed"), "Result missing observed attribute"
+
+    null_model = hyp_result.observed.null
+    alt_model = hyp_result.observed.alt
+
+    assert null_model.name == "GSN", f"Expected null model name 'clock', got {null_model.name}"
+    assert alt_model.name == "GN", f"Expected alt model name 'no-clock', got {alt_model.name}"
+
+def test_bootstrap_replicates(bootstrap_result):
+    """Test if the correct number of bootstrap replicates were run"""
+    bootstraps = bootstrap_result.null_dist
+    num_reps = len(bootstraps)
+    assert num_reps == 100, "Bootstrap replicates incorrect"
+
+
+def test_bootstrap_results_valid(bootstrap_result):
+    """Test if bootstrap log-likelihood values look reasonable"""
+    bootstraps_keys = bootstrap_result.keys()
+    for i in bootstraps_keys:
+        assert isinstance(bootstrap_result[i].LR, float), "LR value is not float"
+        assert isinstance(bootstrap_result[i].null.lnL, float), "lnL value is not float"
+        assert isinstance(bootstrap_result[i].alt.lnL, float), "lnL value is not float"
+
+def test_bootstrap_nfp_diff(bootstrap_result):
+    """Test if the correct number of bootstrap replicates were run"""
+    df = bootstrap_result.observed.df
+    assert df == 2, f"Expected 2 degree of freedom, got {df}"
+
+def test_bootstrap_null_stationarity(bootstrap_result):
+    """Test if the null model is stationary"""
+    null_model_res = bootstrap_result.observed.null.lf
+    matrix = null_model_res.get_psub_for_edge('Rabbit')
+    motif = null_model_res.get_motif_probs()
+    product = np.dot(motif.array, matrix.array)
+    print(np.round(product, 4))
+    print(np.round(motif.array, 4))
+    assert np.all(np.round(product, 4) == np.round(motif.array, 4)), "Null model should be stationary"
+
+
+
+def test_model_args(bootstrap_result):
+    """Test if the model arguments are correctly set"""
+    null_model = bootstrap_result.observed.null
+    alt_model = bootstrap_result.observed.alt
+
+    null_stats = tabulate(null_model)
+    alt_stats = tabulate(alt_model)
+
+    #expect mix discrete continous time model to have 'global params' and 'motif motif2 params'
+    assert 'global params' in null_stats, "Null model args missing 'global params'"
+    assert 'global params' in alt_stats, "Alt model args missing 'global params'"
+    assert 'motif motif2 params' in alt_stats, "Alt model args missing 'motif params'"
+    assert 'motif motif2 params' in null_stats, "Null model args missing 'motif params'"
+    #for the ton, 'edge params' in both null and alt model
+    assert 'edge params' in alt_stats, "Alt model args missing 'edge params'"
+    assert 'edge params' in null_stats, "Null model args missing 'edge params'"
