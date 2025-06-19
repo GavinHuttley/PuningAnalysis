@@ -7,7 +7,8 @@ import uuid
 from pathlib import Path
 from cogent3.app import evo
 import shutil
-
+import faulthandler
+faulthandler.enable()
 
 def configure_parallel(parallel_option: bool, PBS_NCPUS: int) -> dict:
     """returns parallel configuration settings for use as composable.apply_to(**config)"""
