@@ -5,10 +5,15 @@ from cogent3.app.typing import AlignedSeqsType, SerialisableType
 from scitrack import CachingLogger
 import uuid
 from pathlib import Path
+
+from mpi4py import MPI
+
 from cogent3.app import evo
 import shutil
 import faulthandler
 faulthandler.enable()
+
+print("MPI version:", MPI.Get_version())
 
 def configure_parallel(parallel_option: bool, PBS_NCPUS: int) -> dict:
     """returns parallel configuration settings for use as composable.apply_to(**config)"""
