@@ -44,13 +44,11 @@ def test_hypothesis_non_stationary_model(aln: AlignedSeqsType, num_reps = 100, t
     outgroup_name = aln.info['triples_species_name']['outgroup']
     tree = make_tree(tip_names=aln.names)
     
-    outgroup_edge = [outgroup_name]
-
     model_kwargs = dict(
     tree=tree,
     opt_args=opt_args,
     # unique_trees=True,
-    lf_args=dict(discrete_edges=[outgroup_edge]),
+    lf_args=dict(discrete_edges=[outgroup_name]),
     optimise_motif_probs=True,
     )
     null = evo.model(

@@ -26,14 +26,14 @@ def test_hypothesis_clock_model(aln: AlignedSeqsType, tree=None, opt_args=None, 
     tree = make_tree(tip_names=aln.names)
     sp1 = aln.info["triples_species_name"]["ingroup1"]
     sp2 = aln.info["triples_species_name"]["ingroup2"]
-    outgroup_edge = [outgroup_name]
 
     model_kwargs = dict(
         tree=tree,
         opt_args=opt_args,
-        lf_args=dict(discrete_edges=[outgroup_edge]),
+        lf_args=dict(discrete_edges=[outgroup_name]),
         optimise_motif_probs=True,
     )
+    print(model_kwargs)
     null = get_app(
         "model",
         "GN",
