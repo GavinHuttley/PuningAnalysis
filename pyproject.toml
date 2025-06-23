@@ -4,18 +4,16 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "clock_project"
-authors = [{name = "Puning Wang", email = "wangpuning28@gmail.com"}]
+authors = [{name = "Puning Wang", email = "wangpuning28@gmail.com"},
+         {name = "Gavin Huttley", email = "Gavin.Huttley@anu.edu.au"}]
 dependencies = ["click", 
-                "cogent3", 
+                "cogent3[extra]", 
                 "pytest", 
                 "pytest-cov", 
                 "pandas",
-                "plotly",
-                "scipy",
-                "statsmodels",
-                "numpy"]
+                "statsmodels"]
 readme = "README.md"
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.12,<3.14"
 dynamic = ["version", "description"]
 
 [project.urls]
@@ -24,6 +22,10 @@ Home = "https://github.com/GavinHuttley/PuningAnalysis.git"
 [project.scripts]
 cviol_bst = "clock_project.genome_analysis.bootstrapping.clock_violation_bootstrapping:main"
 sviol_bst = "clock_project.genome_analysis.bootstrapping.non_stationarity_bootstrapping:main"
+
+
+
+
 
 
 
