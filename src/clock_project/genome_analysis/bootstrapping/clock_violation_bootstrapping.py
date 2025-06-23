@@ -76,7 +76,7 @@ _click_command_opts = {
     help="Force overwrite output directory by deleting existing content.",
 )
 
-def main(input_path, output_dir, limit, num_reps, mpi, parallel_option, force):
+def main(input_path, output_dir, begin, end, num_reps, mpi, parallel_option, force):
     # Convert to Path right away
     if force and output_dir.exists():
         shutil.rmtree(output_dir, ignore_errors=True)
@@ -110,7 +110,7 @@ def main(input_path, output_dir, limit, num_reps, mpi, parallel_option, force):
     # Apply to data
     input_dstore = open_data_store(input_path, suffix="json")
     pipeline.apply_to(
-        input_dstore[0:limit],
+        input_dstore[begin:end],
         show_progress=True,
         logger=LOGGER,
         **parallel_config
