@@ -55,7 +55,8 @@ _click_command_opts = {
 @click.command(**_click_command_opts)
 @click.argument("input_path", type=Path)
 @click.option("--output_dir", "-o", type=Path, help="Output directory")
-@click.option("--limit", "-l", type=int, help="limit for number of files")
+@click.option("--begin", "-b", type=int, help="Begin number of running files")
+@click.option("--end", "-e", type=int, help="End number of running files")
 @click.option(
     "--num_reps", "-r", type=int, default=100, help="Number of bootstrap replicates"
 )
