@@ -5,15 +5,9 @@ from cogent3.app.typing import AlignedSeqsType, SerialisableType
 from scitrack import CachingLogger
 import uuid
 from pathlib import Path
-
-from mpi4py import MPI
-
 from cogent3.app import evo
 import shutil
-import faulthandler
-faulthandler.enable()
 
-print("MPI version:", MPI.Get_version())
 
 def configure_parallel(parallel_option: bool, PBS_NCPUS: int) -> dict:
     """returns parallel configuration settings for use as composable.apply_to(**config)"""
@@ -39,7 +33,6 @@ def test_hypothesis_clock_model(aln: AlignedSeqsType, tree=None, opt_args=None, 
         lf_args=dict(discrete_edges=[outgroup_name]),
         optimise_motif_probs=True,
     )
-    print(model_kwargs)
     null = get_app(
         "model",
         "GN",
@@ -97,16 +90,14 @@ def main(input_path, output_dir, limit, num_reps, mpi, parallel_option, force):
     LOGGER.log_versions("numpy")
     LOGGER.log_versions("cogent3")
     LOGGER.log_versions("clock_project")
-    # Configure parallel processing
 
-    # Build minimal pipeline
+    
     loader = get_app("load_json")
     
 
     writer = get_app("write_json", 
                    data_store=open_data_store(output_dir, mode="w", suffix="json"), id_from_source=get_id)
     
-    # pipeline = loader + test_hypothesis_clock_model(num_reps = num_reps) + writer
     pipeline = loader + test_hypothesis_clock_model(num_reps = num_reps) + writer
 
 
