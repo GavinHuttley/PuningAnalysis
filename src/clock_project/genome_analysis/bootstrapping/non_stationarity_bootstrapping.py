@@ -82,6 +82,8 @@ _click_command_opts = {
 @click.option(
     "--num_reps", "-r", type=int, default=100, help="Number of bootstrap replicates"
 )
+@click.option("--begin", "-b", type=int, help="Begin number of running files")
+@click.option("--end", "-e", type=int, help="End number of running files")
 @click.option(
     "-p",
     "--parallel_option",
@@ -97,7 +99,7 @@ _click_command_opts = {
     help="Force overwrite output directory by deleting existing content.",
 )
 
-def main(input_path, output_dir, mpi, limit, num_reps, parallel_option, force):
+def main(input_path, output_dir, mpi, begin, end, num_reps, parallel_option, force):
 
     if force and output_dir.exists():
         shutil.rmtree(output_dir, ignore_errors=True)
@@ -129,7 +131,7 @@ def main(input_path, output_dir, mpi, limit, num_reps, parallel_option, force):
     )
 
     app.apply_to(
-        input_dstore[0:limit],
+        input_dstore[begin:end],
         show_progress=True,
         logger=LOGGER,
         **parallel_config,
