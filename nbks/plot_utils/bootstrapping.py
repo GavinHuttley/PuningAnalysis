@@ -7,6 +7,8 @@ from collections import defaultdict
 from random import sample
 import plotly.express as px
 from scipy.stats import spearmanr
+from plot_utils.util import update_figure_format
+
 
 
 
@@ -22,18 +24,8 @@ def p_value_null_distirbution(result, value):
 
 
 def qq_plot_uniform(data, a=0, b=1):
-    """
-    Creates a QQ plot of the provided data against a uniform distribution using Plotly.
-
-    Args:
-    data (array-like): The dataset to plot.
-    a (float): The lower bound of the uniform distribution (default 0).
-    b (float): The upper bound of the uniform distribution (default 1).
-    """
-    # Scale data for the specified uniform range
     data = np.array(data)
     data.sort()  # Sort the data for plotting
-    scaled_data = (data - a) / (b - a)
 
     # Calculate quantiles
     n = len(data)
@@ -43,7 +35,7 @@ def qq_plot_uniform(data, a=0, b=1):
     fig = go.Figure()
 
     # Adding scatter plot for QQ plot
-    fig.add_trace(go.Scatter(x=theoretical_quantiles, y=scaled_data, mode='markers',
+    fig.add_trace(go.Scatter(x=theoretical_quantiles, y=data, mode='markers',
                              name=None,
                              showlegend=False,
                              marker=dict(color='#67a8cd', size = 5)))
@@ -56,39 +48,19 @@ def qq_plot_uniform(data, a=0, b=1):
     
     
     fig.update_layout(title=None, 
-                  xaxis_title='Uniform Quantiles', 
-                  yaxis_title=r'$\hat{p}-\text{value}$',
-                    template='plotly_white',
-                    width=500, height=600,
-                    margin=dict(l=20, r=20, t=50, b=20),
-                    autosize=True,
-                    yaxis_title_font={'size': 25},  
-                    xaxis_title_font={'size': 25},
-                    showlegend=True,
-                        xaxis=dict(
-            title_font=dict(size=25, family='Arial', color='black'),
-            tickfont=dict(size=14),
-            gridcolor='lightgrey'
-        ),
-                    yaxis=dict(
-            title_font=dict(size=25, family='Arial', color='black'),
-            tickfont=dict(size=14),
-            gridcolor='lightgrey')
+                xaxis_title='Uniform Quantiles', 
+                yaxis_title=r'$\hat{p}-\text{value}$',
+                showlegend=True,
     )
+
+    fig = update_figure_format(fig)
+
 
     return fig
 
 
 def qq_plot_null_observed(data, data2, a=0, b=1):
-    """
-    Creates a QQ plot of the provided data against a uniform distribution using Plotly.
 
-    Args:
-    data (array-like): The dataset to plot.
-    a (float): The lower bound of the uniform distribution (default 0).
-    b (float): The upper bound of the uniform distribution (default 1).
-    """
-    # Scale data for the specified uniform range
     data = np.array(data)
     data.sort()  # Sort the data for plotting
     scaled_data = (data - a) / (b - a)
@@ -118,29 +90,13 @@ def qq_plot_null_observed(data, data2, a=0, b=1):
                                 name='<b>Observed</b>',
                                 marker=dict(color='#6fba4f', size = 4)))
 
-    # # Add line of perfect fit
-    # fig.add_trace(go.Scatter(x=[0, 1], y=[0, 1], mode='lines',
-    #                             name=None,
-    #                             line=dict(color='red', dash='dash')))
 
-    fig.update_layout(title=None, xaxis_title='Uniform Quantiles', yaxis_title=r'$\hat{p}-\text{value}$',
-                    template='plotly_white',
-                    margin=dict(l=20, r=20, t=50, b=20),
-                    autosize=True,
-                    yaxis_title_font={'size': 25, 'family': 'Arial', 'color': 'black'},  
-                    xaxis_title_font={'size': 25}, 
-                    width=600, height=600,
-                    showlegend=True,
-                    legend=dict(font = dict(size=16)),
-            xaxis=dict(
-            title_font=dict(size=25, family='Arial', color='black'),
-            tickfont=dict(size=14),
-            gridcolor='lightgrey'
-        ),
-                    yaxis=dict(
-            title_font=dict(size=25, family='Arial', color='black'),
-            tickfont=dict(size=14),
-            gridcolor='lightgrey'))
+    fig.update_layout(title=None, 
+                      xaxis_title='Uniform Quantiles', 
+                      yaxis_title=r'$\hat{p}-\text{value}$',
+                    showlegend=True,)
+    
+    fig = update_figure_format(fig)
     
     
     return fig
@@ -152,7 +108,7 @@ def get_proportion_rejected_correlation_fig(proportion_less_than_005_tos, propor
     y_values = np.array(list(proportion_less_than_005_clock_filtered.values())) * 100
 
     # Create scatter plot
-    fig_0 = px.scatter(
+    fig = px.scatter(
         x=x_values,
         y=y_values,
         labels={'x': 'Proportion reject the clock', 'y': 'Proportion reject the stationarity'},
@@ -161,7 +117,7 @@ def get_proportion_rejected_correlation_fig(proportion_less_than_005_tos, propor
     )
 
     # Update layout for axis titles and legend
-    fig_0.update_layout(
+    fig.update_layout(
         xaxis=dict(
             title='<b>Stationarity rejected %</b>',
         ),
@@ -171,16 +127,15 @@ def get_proportion_rejected_correlation_fig(proportion_less_than_005_tos, propor
     )
 
     # Update traces for markers and trendline
-    fig_0.update_traces(
+    fig.update_traces(
         marker=dict(
             size=8,
             opacity=0.8,
-            color='#7ed3f6',
-            line=dict(width=1, color='DarkSlateGrey')
+            color='#67a8cd',
         ),
         selector=dict(type='scatter', mode='markers')
     )
-    fig_0.update_traces(
+    fig.update_traces(
         line=dict(color='#c73d47', width=2),
         selector=dict(type='scatter', mode='lines')
     )
@@ -188,7 +143,7 @@ def get_proportion_rejected_correlation_fig(proportion_less_than_005_tos, propor
 
     # Calculate Spearman correlation and add annotation
     corr, p = spearmanr(list(proportion_less_than_005_tos.values()), list(proportion_less_than_005_toc.values()))
-    fig_0.add_annotation(
+    fig.add_annotation(
         x=1, y=1,
         text=f'ρ = {corr:.4f}',  # Spearman's rho with 4 decimal precision
         showarrow=False,
@@ -199,7 +154,9 @@ def get_proportion_rejected_correlation_fig(proportion_less_than_005_tos, propor
         borderwidth=1
     )
 
-    return fig_0
+    fig = update_figure_format(fig)
+
+    return fig
 
 def get_p_value_distirbution(input_data_dir):
     p_value_observed_dict = {}

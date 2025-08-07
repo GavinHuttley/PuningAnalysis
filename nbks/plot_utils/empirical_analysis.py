@@ -6,6 +6,7 @@ import os
 import json
 import plotly.express as px
 from scipy import stats
+from plot_utils.util import update_figure_format
 
 
 
@@ -234,95 +235,85 @@ def get_correlation_factor_histogram(correlation_list):
     # Data for histogram
     values = list(correlation_list.values())
     # Create the histogram with density normalization
-    fig2 = px.histogram(
+    fig = px.histogram(
         values,
         labels={'x': 'Correlation Coefficient', 'y': 'Density'},
         title=None,
-        color_discrete_sequence=['#a7b8d8'],  # Set the color to a shade of orange
+        color_discrete_sequence=['#67a8cd'],  # Set the color to a shade of orange
     )   
 
     # Update layout for presentation
-    fig2.update_layout(
-        template='plotly_white',
-        margin=dict(l=50, r=50, t=50, b=10),  # Adjust margins for a balanced look
-        autosize=True,
-        yaxis_title='<b>Count</b>',  # Explicit y-axis title
-        xaxis_title=r'$\text{Spearman } \hat{\rho}$',  # Explicit x-axis title
-        yaxis_title_font=dict(size=22),  # Adjust y-axis font size
-        xaxis_title_font=dict(size=22),  # Adjust x-axis font size
-        font=dict(size=20, color = 'black', family = 'Arial'),  # General font size for labels and titles
-        width=800,  # Set figure width (optional for better control)
-        height=400,  # Set figure height (optional for better control)
-        showlegend=False  # Remove the legend
+    fig.update_layout(
+        yaxis_title='<b>Count</b>',  
+        xaxis_title=r'$\text{Spearman } \hat{\rho}$',  
+        showlegend=False 
     )
 
-    fig2.add_shape(
+    fig.add_shape(
         type="line",
         x0=0.2, y0=0, x1=0.2, y1=15,
         line=dict(color="#c73d47", width=4, dash="dashdot"),
     )
 
     # Set transparency level and add a solid line around each bar
-    fig2.update_traces(
+    fig.update_traces(
         opacity=1,  # Set the transparency (0 = fully transparent, 1 = fully opaque)
         marker_line_color='black',  # Color of the line around each bar
         marker_line_width=1.5,  # Width of the line around each bar
     xbins=dict(size=0.05)
     )
 
+    fig = update_figure_format(fig)
+
+    return fig
+
 
 
 def get_correlation_factors_violin_plot(correlation_list):
     # Create the histogram with density normalization
-    fig2 = px.violin(
+    fig = px.violin(
         list(correlation_list.values()),
         labels={'x': 'Correlation Coefficient', 'y': 'Density'},
         title=None,
-        color_discrete_sequence=['#a7b8d8'],  # Set the color to a shade of orange
+        color_discrete_sequence=['#67a8cd'],  # Set the color to a shade of orange
         orientation='h',
         points='all'
     )   
 
     # Update layout for presentation
-    fig2.update_layout(
-        template='plotly_white',
-        margin=dict(l=50, r=50, t=10, b=50),  # Adjust margins for a balanced look
-        autosize=True,
-        yaxis_title=None,  # Explicit y-axis title
-        xaxis_title=r'$\text{Spearman } \hat{\rho}$',  # Explicit x-axis title
-        xaxis_title_font=dict(size=22),  # Adjust x-axis font size
-        font=dict(size=20, color = 'black', family = 'Arial'),  # General font size for labels and titles
-        width=800,  # Set figure width (optional for better control)
-        height=300,  # Set figure height (optional for better control)
-        showlegend=False  # Remove the legend
+    fig.update_layout(
+        yaxis_title=None, 
+        xaxis_title=r'$\text{Spearman } \hat{\rho}$',  
+        showlegend=False  
     )
 
 
-    fig2.add_shape(
+    fig.add_shape(
         type="line",
         x0=0.2, y0=-0.5, x1=0.2, y1=0.5,
         line=dict(color="#c73d47", width=4, dash="dashdot"),
     )
 
-    fig2.update_xaxes(
+    fig.update_xaxes(
         showticklabels=True,
         showgrid=True,
-        gridcolor='black',
         gridwidth=1,
         zeroline=True,
         zerolinecolor='black',
         zerolinewidth=1,
     )
 
-    fig2.update_yaxes(showticklabels=False)
+    fig.update_yaxes(showticklabels=False)
 
-    return fig2
+    fig = update_figure_format(fig)
+
+
+    return fig
 
 def get_correlation_factor_tos_rejection_correlation_fig(proportion_less_than_005_tos, corr_list):
     corr_list_filtered = {gene: corr_list[gene] for gene in proportion_less_than_005_tos.keys()}
 
-    import plotly.express as px
-    fig_0 = px.scatter(
+    fig = px.scatter(
         x=np.array(list(proportion_less_than_005_tos.values()))*100, 
         y=np.array(list(corr_list_filtered.values()))*100, 
         labels={'x':'Proportion reject the stationarity', 'y':r'$\text{Spearman } \rho$'}, 
@@ -330,24 +321,23 @@ def get_correlation_factor_tos_rejection_correlation_fig(proportion_less_than_00
         title=None
     )
 
-    fig_0.update_layout(
+    fig.update_layout(
         xaxis_title= '<b>Stationarity rejected %</b>',
         yaxis_title= r'$\text{Spearman } \hat{\rho}$',
     )
 
     # Customize the markers (Change the color to #7ed3f6)
-    fig_0.update_traces(
+    fig.update_traces(
         marker=dict(
             size=8,
             opacity=0.8,
-            color='#7ed3f6',  # Set the color of the points to #7ed3f6
-            line=dict(width=1, color='DarkSlateGrey')
+            color='#67a8cd', 
         ),
         selector=dict(mode='markers')
     )
 
     # Customize the trendline
-    fig_0.update_traces(
+    fig.update_traces(
         selector=dict(mode='lines'),
         line=dict(color='#c73d47', width=2)
     )
@@ -355,7 +345,7 @@ def get_correlation_factor_tos_rejection_correlation_fig(proportion_less_than_00
 
     cor,p = stats.spearmanr(list(proportion_less_than_005_tos.values()), list(corr_list_filtered.values()))
 
-    fig_0.add_annotation(
+    fig.add_annotation(
         x=1,  # Adjust x-position of the annotation (relative to x-axis range)
         y=1,  # Adjust y-position of the annotation (relative to y-axis range)
         text=f'\u03C1 = {cor:.4f}',  # R² value with 4 decimal precision
@@ -368,7 +358,10 @@ def get_correlation_factor_tos_rejection_correlation_fig(proportion_less_than_00
         borderwidth=1
     )
 
-    return fig_0
+    fig = update_figure_format(fig)
+
+
+    return fig
 
 
 
