@@ -9,8 +9,8 @@ import statsmodels.api as sm
 from scipy.stats import spearmanr
 import scipy
 import scipy.linalg
+from plot_utils.util import update_figure_format
 
-load_json_app = get_app("load_json")
 
 def compute_aginst_Q(matrices_list, pi, t_range):
     result_list = []
@@ -60,7 +60,6 @@ def get_ens_abs_diff(pi, Q1, Q2, t):
     return ens_absdiff
 
 
-
 def get_jad_difference(pi, Q1, Q2, t):
     p1 = scipy.linalg.expm(Q1*t)
     p2 = scipy.linalg.expm(Q2*t)
@@ -75,11 +74,16 @@ def get_jad_difference(pi, Q1, Q2, t):
 
 def plot_time_grouped_scatter_2x2(df, x_col, y_col):
     times = sorted(df['Time'].unique())
-
-    fig = make_subplots(rows=2, cols=2,
-                        horizontal_spacing=0.05, vertical_spacing=0.2)
+    subplot_titles = [f't={t}' for t in times]
+    fig = make_subplots(
+        rows=2, cols=2,
+        horizontal_spacing=0.15, vertical_spacing=0.2,
+        subplot_titles=subplot_titles           # <-- AND THIS
+    )
 
     subplot_positions = [(1, 1), (1, 2), (2, 1), (2, 2)]
+
+
     for position, time in zip(subplot_positions, times):
         sub_df = df[df['Time'] == time]
         x_data = sub_df[x_col]
@@ -129,11 +133,38 @@ def plot_time_grouped_scatter_2x2(df, x_col, y_col):
             bgcolor="white",
             opacity=0.8,
             row=position[0], col=position[1])
+        
+        # x_min, x_max = np.min(x_data_no_outliers), np.max(x_data_no_outliers)
+        # y_min, y_max = np.min(y_data_no_outliers), np.max(y_data_no_outliers)
+        
+        # x_tickvals = np.linspace(x_min, x_max, 4)
+        # y_tickvals = np.linspace(y_min, y_max, 4)
+        
+        # fig.update_xaxes(
+        #     tickvals=x_tickvals,
+        #     row=position[0], col=position[1]
+        # )
+        # fig.update_yaxes(
+        #     tickvals=y_tickvals,
+        #     row=position[0], col=position[1]
+        # )
 
-    fig.update_layout(
-        template='plotly_white',
-        width=800,  
-        height=500,  
+    fig.add_shape(
+    type='line',
+    x0=0.5, y0=0, x1=0.5, y1=1,
+    line=dict(color="black", width=0.5),
+    xref='paper', yref='paper',
+    layer="above"
+    )
+    fig.add_shape(
+        type='line',
+        x0=0, y0=0.5, x1=1, y1=0.5,
+        line=dict(color="black", width=0.5),
+        xref='paper', yref='paper',
+        layer="above"
+    )
+
+    fig.update_layout( 
         showlegend=False  
     )
 
@@ -146,14 +177,15 @@ def plot_time_grouped_scatter_2x2(df, x_col, y_col):
 )
     fig.update_xaxes(
     title_text=r'$\delta (JAD)$', 
-    title_font=dict(size=20, family='Arial', color='black'), 
     row=2
 )
     fig.update_yaxes(
         title_text=r'$\delta (ENS)$', 
-        title_font=dict(size=20, family='Arial', color='black'),  
         col=1
     )
+
+    fig = update_figure_format(fig)
+
 
     return fig
 
@@ -196,10 +228,6 @@ def correlation_factor_plot(df_low, df_high, t_range):
     # Create a new figure
     fig = go.Figure()
 
-    # Define color mapping for each measure
-    color_map = {
-        'JAD': '#62be9f'
-    }
 
     # Add traces for each measure and condition (Balanced/Imbalanced)
     for measure in df_correlation['Measure'].unique():
@@ -210,7 +238,7 @@ def correlation_factor_plot(df_low, df_high, t_range):
                 y=filtered_data['Correlation'], 
                 mode='lines+markers', 
                 name=f'{condition}',
-                line=dict(dash='dash' if condition == 'Balanced' else 'solid', color=color_map[measure]),
+                line=dict(dash='dash' if condition == 'Balanced' else 'solid', color='#67a8cd'),
                 marker=dict(symbol='circle' if condition == 'Balanced' else 'square')
             ))
 
@@ -231,6 +259,8 @@ def correlation_factor_plot(df_low, df_high, t_range):
             font=dict(size=14),
         )
     )
+
+    fig = update_figure_format(fig)
 
     return fig
 
