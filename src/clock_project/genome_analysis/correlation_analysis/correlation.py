@@ -73,7 +73,7 @@ from scipy.stats import spearmanr
 
 def plot_time_grouped_scatter_2x2(df, x_col, y_col):
     custom_colorscale = {0.5: '#67a8cd',  # Color for time 0.5
-    1.0: '#67a8cd',  # Color for time 1.0
+    1.0: "#11bbe5",  # Color for time 1.0
     1.5: '#67a8cd',  # Color for time 1.5
     2.0: '#67a8cd'    # Color for time 2.0
 }
@@ -150,6 +150,7 @@ def plot_time_grouped_scatter_2x2(df, x_col, y_col):
 
     return fig
 
+# can be delected
 
 
 
