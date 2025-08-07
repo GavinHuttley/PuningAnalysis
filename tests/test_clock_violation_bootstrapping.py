@@ -3,7 +3,7 @@ from pathlib import Path
 from cogent3 import open_data_store, get_app
 
 # Adjust this to point to your test bootstrap result file
-toc_result_path = '~/clock/mammal_orthologs_hsap_1/toc_test_to_del'
+toc_result_path = '~/clock/mammal_orthologs_hsap_1/toc_result'
 
 loader_json = get_app('load_json')
 toc_result_dstore = open_data_store(toc_result_path, suffix = 'json')

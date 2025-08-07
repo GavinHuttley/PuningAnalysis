@@ -3,7 +3,7 @@ from cogent3 import open_data_store, get_app
 import numpy as np
 
 # Adjust this to point to your test bootstrap result file
-ton_result_path = '~/clock/mammal_orthologs_hsap_1/ton_test_to_del'
+ton_result_path = '~/clock/mammal_orthologs_hsap_1/ton_result'
 
 loader_json = get_app('load_json')
 ton_result_dstore = open_data_store(ton_result_path, suffix = 'json')
