@@ -1,8 +1,14 @@
-from cogent3 import get_app, open_data_store
+from cogent3 import get_app
 from cogent3.app.composable import NotCompleted
 import numpy as np
 import plotly.graph_objects as go
 from scipy.stats import uniform
+from collections import defaultdict
+from random import sample
+import plotly.express as px
+from scipy.stats import spearmanr
+
+
 
 load_json_app = get_app("load_json")
 
@@ -140,14 +146,66 @@ def qq_plot_null_observed(data, data2, a=0, b=1):
     return fig
 
 
-def get_p_value_distirbution(input_data_dir):
-    tos_result_dir = '/Users/gulugulu/clock/mammal_orthologs_hsap_1/tos_boostrapping_results'
-    input_data_store_tos_result = open_data_store(tos_result_dir, suffix= 'json')
+def get_proportion_rejected_correlation_fig(proportion_less_than_005_tos, proportion_less_than_005_toc):
+    proportion_less_than_005_clock_filtered = {gene: proportion_less_than_005_toc[gene] for gene in proportion_less_than_005_tos.keys()}
+    x_values = np.array(list(proportion_less_than_005_tos.values())) * 100
+    y_values = np.array(list(proportion_less_than_005_clock_filtered.values())) * 100
 
+    # Create scatter plot
+    fig_0 = px.scatter(
+        x=x_values,
+        y=y_values,
+        labels={'x': 'Proportion reject the clock', 'y': 'Proportion reject the stationarity'},
+        trendline="ols",
+        title=None
+    )
+
+    # Update layout for axis titles and legend
+    fig_0.update_layout(
+        xaxis=dict(
+            title='<b>Stationarity rejected %</b>',
+        ),
+        yaxis=dict(
+            title='<b>Clock rejected %</b>',
+        )
+    )
+
+    # Update traces for markers and trendline
+    fig_0.update_traces(
+        marker=dict(
+            size=8,
+            opacity=0.8,
+            color='#7ed3f6',
+            line=dict(width=1, color='DarkSlateGrey')
+        ),
+        selector=dict(type='scatter', mode='markers')
+    )
+    fig_0.update_traces(
+        line=dict(color='#c73d47', width=2),
+        selector=dict(type='scatter', mode='lines')
+    )
+
+
+    # Calculate Spearman correlation and add annotation
+    corr, p = spearmanr(list(proportion_less_than_005_tos.values()), list(proportion_less_than_005_toc.values()))
+    fig_0.add_annotation(
+        x=1, y=1,
+        text=f'ρ = {corr:.4f}',  # Spearman's rho with 4 decimal precision
+        showarrow=False,
+        font=dict(size=15, color="red"),
+        xref="paper", yref="paper",
+        bgcolor="rgba(255, 255, 255, 0.7)",
+        bordercolor="black",
+        borderwidth=1
+    )
+
+    return fig_0
+
+def get_p_value_distirbution(input_data_dir):
     p_value_observed_dict = {}
     p_value_tested_dict = {}
     i = 0
-    for data in input_data_store_tos_result:
+    for data in input_data_dir:
         gene_name = data.unique_id.split('.')[0]
         bootstrap_result = load_json_app(data)
         if isinstance(bootstrap_result, NotCompleted):
@@ -158,10 +216,9 @@ def get_p_value_distirbution(input_data_dir):
             p_value_tested_dict[gene_name] = p_value_ST(bootstrap_result)
 
     # get the p-value of null simulated for each algnment 
-    from random import sample
     #get distirbution of null for tos
     p_value_list_tos_null = {}
-    for path in input_data_store_tos_result:
+    for path in input_data_dir:
         gene_name = path.unique_id.split('.')[0]
         bootstrap_result = load_json_app(path)
         if not isinstance(bootstrap_result, NotCompleted):
@@ -174,3 +231,23 @@ def get_p_value_distirbution(input_data_dir):
             p_value = p_value_null_distirbution(bootstrap_result, sub_result.LR)
             p_value_list_tos_null[gene_name] = p_value
     return p_value_observed_dict, p_value_tested_dict, p_value_list_tos_null
+
+
+
+def get_rejected_proportion(p_value_observed_dict):
+    
+    # Dictionary to store the count of values < 0.05 for each gene
+    count_less_than_005_clock = defaultdict(int)
+    # Dictionary to store the total count of entries for each gene
+    total_count = defaultdict(int)
+
+    for key, value in p_value_observed_dict.items():
+        gene = key.split('_')[0]
+        total_count[gene] += 1
+        if value != None:
+            if value < 0.05:
+                count_less_than_005_clock[gene] += 1
+
+    # Calculate the proportion of values < 0.05 for each gene
+    proportion_rejected = {gene: count_less_than_005_clock[gene] / total for gene, total in total_count.items()}
+    return proportion_rejected
