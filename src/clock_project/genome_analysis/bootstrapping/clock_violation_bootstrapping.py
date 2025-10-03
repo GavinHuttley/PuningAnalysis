@@ -7,6 +7,8 @@ import uuid
 from pathlib import Path
 from cogent3.app import evo
 import shutil
+import multiprocessing
+
 
 
 def configure_parallel(parallel_option: bool, PBS_NCPUS: int) -> dict:
@@ -21,7 +23,7 @@ def get_id(result):
     return result.source.unique_id
 
 @define_app
-def test_hypothesis_clock_model(aln: AlignedSeqsType, tree=None, opt_args=None, num_reps=10) -> SerialisableType:
+def test_hypothesis_clock_model(aln: AlignedSeqsType, tree=None, opt_args=None) -> SerialisableType:
     outgroup_name = aln.info["triples_species_name"]["outgroup"]
     tree = make_tree(tip_names=aln.names)
     sp1 = aln.info["triples_species_name"]["ingroup1"]
@@ -42,8 +44,7 @@ def test_hypothesis_clock_model(aln: AlignedSeqsType, tree=None, opt_args=None, 
     )
     alt = get_app("model", "GN", name="no-clock", **model_kwargs)
     hyp = get_app("hypothesis", null, alt)
-    bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=False)
-    result = bootstrapper(aln)
+    result = hyp(aln)
     return result
 
 
@@ -55,19 +56,20 @@ _click_command_opts = {
 @click.command(**_click_command_opts)
 @click.argument("input_path", type=Path)
 @click.option("--output_dir", "-o", type=Path, help="Output directory")
-@click.option("--begin", "-b", type=int, help="Begin number of running files")
-@click.option("--end", "-e", type=int, help="End number of running files")
-@click.option(
-    "--num_reps", "-r", type=int, default=100, help="Number of bootstrap replicates"
-)
-@click.option("--mpi", "-m", type=int, default=0, help="Number of MPI processes to use")
-@click.option(
-    "-p",
-    "--parallel_option",
-    is_flag=True,
-    default=False,
-    help="run in parallel (on single machine)",
-)
+# @click.option("--begin", "-b", type=int, help="Begin number of running files")
+# @click.option("--end", "-e", type=int, help="End number of running files")
+# @click.option(
+#     "--num_reps", "-r", type=int, default=100, help="Number of bootstrap replicates"
+# )
+@click.option('-n', '--num_processes', default=multiprocessing.cpu_count(), help='Number of processes to use (default: number of CPUs)')
+# @click.option("--mpi", "-m", type=int, default=0, help="Number of MPI processes to use")
+# @click.option(
+#     "-p",
+#     "--parallel_option",
+#     is_flag=True,
+#     default=False,
+#     help="run in parallel (on single machine)",
+# )
 
 @click.option(
     "--force",
@@ -76,7 +78,7 @@ _click_command_opts = {
     help="Force overwrite output directory by deleting existing content.",
 )
 
-def main(input_path, output_dir, begin, end, num_reps, mpi, parallel_option, force):
+def main(input_path, output_dir, num_processes, force):
     # Convert to Path right away
     if force and output_dir.exists():
         shutil.rmtree(output_dir, ignore_errors=True)
@@ -99,21 +101,22 @@ def main(input_path, output_dir, begin, end, num_reps, mpi, parallel_option, for
     writer = get_app("write_json", 
                    data_store=open_data_store(output_dir, mode="w", suffix="json"), id_from_source=get_id)
     
-    pipeline = loader + test_hypothesis_clock_model(num_reps = num_reps) + writer
+    pipeline = loader + test_hypothesis_clock_model() + writer
 
 
-    parallel_config = configure_parallel(
-        parallel_option=parallel_option, 
-        PBS_NCPUS = mpi
-    )
+    # parallel_config = configure_parallel(
+    #     parallel_option=parallel_option, 
+    #     PBS_NCPUS = mpi
+    # )
 
     # Apply to data
     input_dstore = open_data_store(input_path, suffix="json")
     pipeline.apply_to(
-        input_dstore[begin:end],
+        input_dstore,
         show_progress=True,
         logger=LOGGER,
-        **parallel_config
+        parallel=True, 
+        par_kw=dict(max_workers=num_processes)
     )
 
 if __name__ == "__main__":
