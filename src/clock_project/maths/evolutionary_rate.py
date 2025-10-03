@@ -80,7 +80,7 @@ def generate_ENS(Q1, Q2, t_range, t1):
 #non-stationary process 
 #evolution rate at each time point in non-stationary process
 
-def calculate_non_statioanry_mu(Q, pi_0, t):
+def calculate_non_stationary_rate(Q, pi_0, t):
     """
     Calculate the value of mu prime (μ(t)) for a given substitution rate matrix Q,
     initial nucleotide frequency pi_0, and time t.
@@ -122,7 +122,7 @@ def calculate_non_stationary_mu_prime(Q, pi_0, t):
     return mu_prime_t
 
 #stationary process ENS accumulation function
-def generate_ENS(Q1, Q2, t_range, t1):
+def generate_ENS(Q1, t_range):
     """
     Generates the ENS over a range of time points using two different Q matrices before and after a specified time point t1.
     
