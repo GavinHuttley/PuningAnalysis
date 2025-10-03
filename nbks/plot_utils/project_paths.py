@@ -3,12 +3,20 @@ import time
 
 from plotly.io import write_image
 
-ROOT_DIR = pathlib.Path(__file__).parent.parent.parent
+
+ROOT_DIR = pathlib.Path(__file__)
+while not (ROOT_DIR / "PuningAnalysis").exists():
+    ROOT_DIR = ROOT_DIR.parent
+
+ROOT_DIR = ROOT_DIR / "PuningAnalysis"
 
 OUTPUT_ROOT = ROOT_DIR / "outputs"
 
 FIG_DIR = OUTPUT_ROOT / "figs"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
+
+SUPP_FIG_DIR = OUTPUT_ROOT / "supp_figs"
+SUPP_FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 TABLE_DIR = OUTPUT_ROOT / "tables"
 TABLE_DIR.mkdir(parents=True, exist_ok=True)
@@ -16,17 +24,19 @@ TABLE_DIR.mkdir(parents=True, exist_ok=True)
 # SUPP_TABLE_DIR = OUTPUT_ROOT / "tables_supp"
 # SUPP_TABLE_DIR.mkdir(parents=True, exist_ok=True)
 
-DATA_DIR = "/Users/gulugulu/clock/mammal_orthologs_hsap_1"
-# RESULT_DIR = ROOT_DIR / "MutationDiseqAnalysis/results"
+DATA_DIR = pathlib.Path(__file__)
+while not (DATA_DIR / "clock").exists():
+    DATA_DIR = DATA_DIR.parent
 
+DATA_DIR = DATA_DIR / 'clock/mammal_orthologs_hsap_1'
 
 class pdf_writer:
     """class that handles super annoying mathjax warning box in plotly pdf's"""
 
-    def __init__(self) -> None:
+    def __init__(self, width=None, height=None) -> None:
         self._done_once = False
 
-    def __call__(self, fig, path):
+    def __call__(self, fig, path, width=None, height=None):
         # the sleep, plus successive write, is ESSENTIAL to avoid the super annoying
         # "[MathJax]/extensions/MathMenu.js" text box error
         # but we only need to do this once
@@ -35,6 +45,6 @@ class pdf_writer:
             time.sleep(2)
             self._done_once = True
 
-        write_image(fig, path)
+        write_image(fig, path, width = width, height=height)
 
-write_pdf = pdf_writer()
+write_pdf = pdf_writer(width=600, height=800)

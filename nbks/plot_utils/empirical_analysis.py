@@ -7,6 +7,7 @@ import json
 import plotly.express as px
 from scipy import stats
 from plot_utils.util import update_figure_format
+import plotly.figure_factory as ff
 
 
 
@@ -269,41 +270,25 @@ def get_correlation_factor_histogram(correlation_list):
 
 
 
-def get_correlation_factors_violin_plot(correlation_list):
-    # Create the histogram with density normalization
-    fig = px.violin(
-        list(correlation_list.values()),
-        labels={'x': 'Correlation Coefficient', 'y': 'Density'},
-        title=None,
-        color_discrete_sequence=['#67a8cd'],  # Set the color to a shade of orange
-        orientation='h',
-        points='all'
-    )   
+def get_correlation_factors_distplot(correlation_list):
+    hist_data = [list(correlation_list.values())]
+    group_labels = ['Correlation Coefficient']
 
-    # Update layout for presentation
+    fig = ff.create_distplot(
+        hist_data,
+        group_labels,
+        bin_size=0.02,
+        show_rug=False,
+        colors=['#67a8cd']
+    )
+
     fig.update_layout(
-        yaxis_title=None, 
-        xaxis_title=r'$\text{Spearman } \hat{\rho}$',  
+        xaxis_title='Correlation Coefficient',
+        yaxis_title='Density',
+        title=None, 
         showlegend=False  
     )
 
-
-    fig.add_shape(
-        type="line",
-        x0=0.2, y0=-0.5, x1=0.2, y1=0.5,
-        line=dict(color="#c73d47", width=4, dash="dashdot"),
-    )
-
-    fig.update_xaxes(
-        showticklabels=True,
-        showgrid=True,
-        gridwidth=1,
-        zeroline=True,
-        zerolinecolor='black',
-        zerolinewidth=1,
-    )
-
-    fig.update_yaxes(showticklabels=False)
 
     fig = update_figure_format(fig)
 
@@ -348,7 +333,7 @@ def get_correlation_factor_tos_rejection_correlation_fig(proportion_less_than_00
     fig.add_annotation(
         x=1,  # Adjust x-position of the annotation (relative to x-axis range)
         y=1,  # Adjust y-position of the annotation (relative to y-axis range)
-        text=f'\u03C1 = {cor:.4f}',  # R² value with 4 decimal precision
+        text = rf'$\hat{{\rho}} = {cor:.4f}$',  # R² value with 4 decimal precision
         showarrow=False,
         font=dict(size=14, color="red"),
         xref="paper",  # Positioning relative to the paper (can be set to 'x' and 'y' for data-coordinates)

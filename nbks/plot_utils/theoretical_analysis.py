@@ -74,12 +74,13 @@ def get_jad_difference(pi, Q1, Q2, t):
 
 def plot_time_grouped_scatter_2x2(df, x_col, y_col):
     times = sorted(df['Time'].unique())
-    subplot_titles = [f't={t}' for t in times]
+    subplot_titles = [rf'$t_s={t}$' for t in times]
     fig = make_subplots(
         rows=2, cols=2,
         horizontal_spacing=0.15, vertical_spacing=0.2,
         subplot_titles=subplot_titles           # <-- AND THIS
     )
+
 
     subplot_positions = [(1, 1), (1, 2), (2, 1), (2, 2)]
 
@@ -122,7 +123,7 @@ def plot_time_grouped_scatter_2x2(df, x_col, y_col):
         fig.add_annotation(
             xref="x domain", yref="y domain",
             x=0.95, y=0.95,
-            text=f'\u03C1 = {corr:.2f}',
+            text = rf'$\hat{{\rho}} = {corr:.4f}$', 
             showarrow=False,
             font=dict(size=10, color="red"),
             align="right",
@@ -134,20 +135,31 @@ def plot_time_grouped_scatter_2x2(df, x_col, y_col):
             opacity=0.8,
             row=position[0], col=position[1])
         
-        # x_min, x_max = np.min(x_data_no_outliers), np.max(x_data_no_outliers)
-        # y_min, y_max = np.min(y_data_no_outliers), np.max(y_data_no_outliers)
         
-        # x_tickvals = np.linspace(x_min, x_max, 4)
-        # y_tickvals = np.linspace(y_min, y_max, 4)
+        # x_min, x_max = 0, round(np.max(x_data_no_outliers), 1) + 0.1  # keep real max
+        # y_min, y_max = 0, round(np.max(y_data_no_outliers), 1) + 0.1
+
+        # x_step = (x_max - x_min) / 5 if x_max > 0 else 0.1      
+        # y_step = (y_max - y_min) / 5 if x_max > 0 else 0.1   
         
         # fig.update_xaxes(
-        #     tickvals=x_tickvals,
+        #     range=[x_min, x_max],   # force the range
+        #     dtick=x_step,             # fixed spacing between ticks
+        #     tickformat=".2f",       # show small decimals clearly
+        #     showticklabels=True,    # ensure labels are not hidden in subplots
+        #     ticks="outside",
         #     row=position[0], col=position[1]
         # )
+                
         # fig.update_yaxes(
-        #     tickvals=y_tickvals,
+        #     range=[y_min, y_max],   # force the range
+        #     dtick=y_step,             # fixed spacing between ticks
+        #     tickformat=".2f",       # show small decimals clearly
+        #     showticklabels=True,    # ensure labels are not hidden in subplots
+        #     ticks="outside",
         #     row=position[0], col=position[1]
         # )
+
 
     fig.add_shape(
     type='line',

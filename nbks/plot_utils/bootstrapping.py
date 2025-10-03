@@ -16,9 +16,9 @@ load_json_app = get_app("load_json")
 
 
 def p_value_ST(result):
-    return sum(result.observed.LR <= null_lr for null_lr in result.null_dist) / len(result.null_dist)
+    return bootstrap_pval(result, result.observed.LR)
 
-def p_value_null_distirbution(result, value): 
+def bootstrap_pval(result, value): 
     return sum(value <= null_lr for null_lr in result.null_dist) / len(result.null_dist)
 
 
@@ -51,6 +51,8 @@ def qq_plot_uniform(data, a=0, b=1):
                 xaxis_title='Uniform Quantiles', 
                 yaxis_title=r'$\hat{p}-\text{value}$',
                 showlegend=True,
+                width = 400,
+                height = 500
     )
 
     fig = update_figure_format(fig)
@@ -97,7 +99,12 @@ def qq_plot_null_observed(data, data2, a=0, b=1):
                     showlegend=True,)
     
     fig = update_figure_format(fig)
-    
+
+    fig.update_yaxes(
+    title_font=dict(size=20, family='CMU Serif', color='black'),
+    tickfont=dict(size=20),
+    gridcolor='lightgrey'
+)
     
     return fig
 
@@ -119,10 +126,10 @@ def get_proportion_rejected_correlation_fig(proportion_less_than_005_tos, propor
     # Update layout for axis titles and legend
     fig.update_layout(
         xaxis=dict(
-            title='<b>Stationarity rejected %</b>',
+            title='Stationarity rejected',
         ),
         yaxis=dict(
-            title='<b>Clock rejected %</b>',
+            title='Clock rejected',
         )
     )
 
@@ -145,7 +152,7 @@ def get_proportion_rejected_correlation_fig(proportion_less_than_005_tos, propor
     corr, p = spearmanr(list(proportion_less_than_005_tos.values()), list(proportion_less_than_005_toc.values()))
     fig.add_annotation(
         x=1, y=1,
-        text=f'ρ = {corr:.4f}',  # Spearman's rho with 4 decimal precision
+        text = rf'$\hat{{\rho}} = {corr:.4f}$',  # Spearman's rho with 4 decimal precision
         showarrow=False,
         font=dict(size=15, color="red"),
         xref="paper", yref="paper",
@@ -158,7 +165,7 @@ def get_proportion_rejected_correlation_fig(proportion_less_than_005_tos, propor
 
     return fig
 
-def get_p_value_distirbution(input_data_dir):
+def get_p_value_distribution_tos(input_data_dir):
     p_value_observed_dict = {}
     p_value_tested_dict = {}
     i = 0
@@ -174,7 +181,7 @@ def get_p_value_distirbution(input_data_dir):
 
     # get the p-value of null simulated for each algnment 
     #get distirbution of null for tos
-    p_value_list_tos_null = {}
+    p_value_list_null = {}
     for path in input_data_dir:
         gene_name = path.unique_id.split('.')[0]
         bootstrap_result = load_json_app(path)
@@ -185,11 +192,23 @@ def get_p_value_distirbution(input_data_dir):
                 null_sample_key = sample(list(bootstrap_result.keys())[1:], 1)  # Sampling from keys, skip first key
                 sub_result = bootstrap_result[null_sample_key[0]]
                 pvalue = sub_result.pvalue  # Get the pvalue from the sub_result
-            p_value = p_value_null_distirbution(bootstrap_result, sub_result.LR)
-            p_value_list_tos_null[gene_name] = p_value
-    return p_value_observed_dict, p_value_tested_dict, p_value_list_tos_null
+            p_value = bootstrap_pval(bootstrap_result, sub_result.LR)
+            p_value_list_null[gene_name] = p_value
+    return p_value_observed_dict, p_value_tested_dict, p_value_list_null
 
+def get_p_value_distribution_toc(input_data_dir):
+    p_value_observed_dict = {}
+    i = 0
+    for data in input_data_dir:
+        gene_name = data.unique_id.split('.')[0]
+        hypothesis_result = load_json_app(data)
+        if isinstance(hypothesis_result, NotCompleted):
+            i += 1
+            print(data) 
+        else:
+            p_value_observed_dict[gene_name] = hypothesis_result.pvalue
 
+    return p_value_observed_dict 
 
 def get_rejected_proportion(p_value_observed_dict):
     
