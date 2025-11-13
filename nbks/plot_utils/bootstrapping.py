@@ -126,10 +126,10 @@ def get_proportion_rejected_correlation_fig(proportion_less_than_005_tos, propor
     # Update layout for axis titles and legend
     fig.update_layout(
         xaxis=dict(
-            title='Stationarity rejected',
+            title='Stationarity rejected%',
         ),
         yaxis=dict(
-            title='Clock rejected',
+            title='Clock rejected%',
         )
     )
 

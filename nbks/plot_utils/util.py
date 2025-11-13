@@ -1,4 +1,5 @@
 from cogent3 import get_app
+import numpy
 
 load_json_app = get_app("load_json")
 

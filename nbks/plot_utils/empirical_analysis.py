@@ -238,7 +238,7 @@ def get_correlation_factor_histogram(correlation_list):
     # Create the histogram with density normalization
     fig = px.histogram(
         values,
-        labels={'x': 'Correlation Coefficient', 'y': 'Density'},
+        labels={'x': 'Correlation Coefficient', 'y': 'Count'},
         title=None,
         color_discrete_sequence=['#67a8cd'],  # Set the color to a shade of orange
     )   
@@ -284,7 +284,7 @@ def get_correlation_factors_distplot(correlation_list):
 
     fig.update_layout(
         xaxis_title='Correlation Coefficient',
-        yaxis_title='Density',
+        yaxis_title='count',
         title=None, 
         showlegend=False  
     )
@@ -300,14 +300,14 @@ def get_correlation_factor_tos_rejection_correlation_fig(proportion_less_than_00
 
     fig = px.scatter(
         x=np.array(list(proportion_less_than_005_tos.values()))*100, 
-        y=np.array(list(corr_list_filtered.values()))*100, 
+        y=np.array(list(corr_list_filtered.values())), 
         labels={'x':'Proportion reject the stationarity', 'y':r'$\text{Spearman } \rho$'}, 
         trendline="ols", 
         title=None
     )
 
     fig.update_layout(
-        xaxis_title= '<b>Stationarity rejected %</b>',
+        xaxis_title= 'Stationarity rejected %',
         yaxis_title= r'$\text{Spearman } \hat{\rho}$',
     )
 
