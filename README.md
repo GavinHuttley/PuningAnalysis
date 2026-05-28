@@ -9,4 +9,46 @@ data_filter_seqs.py
 input: raw_data -> output: sampled_unaligned
 
 ### Aligning the sequences
-amino acid translation MAFFT
+Amino acid translation MAFFT
+mafft_align.py
+input: sampled_unaligned -> output: raw_aligned
+
+### Filtering aligned sequence
+Filter the alignment by only keep the third codon position, remove degenerate nucleotide, remove gene wiht less than 30 species and sequence with length less than 550 nucleotides.
+data_filter_aligns.py
+input: raw_aligned -> sampled_aligned
+
+### Fit the alignments to GN model
+Fitting the alignment for each gene to general nucleotide model and get a pylogenetic tree for each gene.
+get_model_fitting_tree.py
+input: sampled_aligned -> output: whole_gene_model_fitting
+
+### Taxanonic triple selection
+sample taxanomic triple for each gene based on the pylogenetic relation in the tree generated from last step, the raw sequence of the three species were aligned again using the same alignment process in MAFFT_align.py
+triple_selection.py
+input: whole_gene_model_fitting, sampled_unaligned, sampled_aligned -> taxanomic_triples, taxanomic_triples_alignments
+
+### Triple model fitting and Taxanomic triple information collection
+Fit the taxanomic triple alignment to general nucleotide model and extract associated information for each taxanomic triple, including:
+{'ens_difference': ens_difference,
+        'shortest_ingroup_ens': shortest_ens,
+        'ens': ens_dict,
+        'ingroup_jsd': ingroup_jsd,
+        'nuc_freqs_dict': distributions,
+        'nabla_values': nabla_dict,
+        'matrices': matrices_list}
+
+The triple information was saved into a JSON file ('triples_info_dict_new.json') for each gene in the associated folder in the triple model filter folder.
+mammal_orthologs_hsap_1/triples_model_fitting/'gene_id'/triples_info_dict_new.json
+mammal_orthologs_hsap_1/triples_model_fitting/'gene_id'/model_fitting_result
+
+triple_model_fitting.py, triples_info_collection.py 
+Input: taxanomic_triples_alignments -> ouput: triple_model_fitting.
+
+
+### Taxanomic triple representative subset collection.
+Stratified sampling taxanomic triple representative subset that contains the same proportion of triples from each gene compared to the full set. 
+triples_representative_subset_selection.py
+Input: triple_model_fitting, taxanomic_triples_alignments -> Oputput: triples_representative_subset, triples_representative_subset_json(selected triple information)
+
+### 
