@@ -56,6 +56,8 @@ Collect matrices in the taxanomic triples where the rate parameter does not appr
 valid_matrix_collection.py, yapeng_check_BV.py
 input: triples_model_fitting --> valid_matrix_full.json
 
-### TOC bootstrap result
+### TOC hypothesis test result
+toc_hypothesis_test_results
 
 ### TOS bootstrap result 
+tos_boostrapping_results
