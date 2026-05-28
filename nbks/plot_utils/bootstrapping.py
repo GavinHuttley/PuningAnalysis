@@ -83,28 +83,51 @@ def qq_plot_null_observed(data, data2, a=0, b=1):
     # Create a QQ plot
     fig = go.Figure()
 
-    fig.add_trace(go.Scatter(x=theoretical_quantiles, y=scaled_data, mode='markers',
-                                name='<b>-ve</b>',
-                                marker=dict(color='#67a8cd', size = 4)))
+    fig.add_trace(
+        go.Scatter(
+            x=theoretical_quantiles,
+            y=scaled_data,
+            mode='lines',  # or 'lines+markers' if you want points too
+            name='<b>-ve</b>',
+            line=dict(color='#67a8cd', shape='spline', smoothing=1.3),
+            marker=dict(color='#67a8cd', size=4),
+        )
+    )
 
-    # Adding scatter plot for QQ plot
-    fig.add_trace(go.Scatter(x=theoretical_quantiles2, y=scaled_data2, mode='markers',
-                                name='<b>Observed</b>',
-                                marker=dict(color='#6fba4f', size = 4)))
+    fig.add_trace(
+        go.Scatter(
+            x=theoretical_quantiles2,
+            y=scaled_data2,
+            mode='lines',
+            name='<b>obs</b>',
+            line=dict(color='#6fba4f', shape='spline', smoothing=1.3),
+            marker=dict(color='#6fba4f', size=4),
+        )
+    )
 
 
     fig.update_layout(title=None, 
                       xaxis_title='Uniform Quantiles', 
-                      yaxis_title=r'$\hat{p}-\text{value}$',
-                    showlegend=True,)
+                      yaxis_title=r'$\Large \hat{p}-\text{value}$',
+                    showlegend=True,
+                        legend=dict(
+        font=dict(family="Times New Roman", size=20)
+    ))
+    
+    
     
     fig = update_figure_format(fig)
 
     fig.update_yaxes(
-    title_font=dict(size=20, family='CMU Serif', color='black'),
-    tickfont=dict(size=20),
     gridcolor='lightgrey'
 )
+    
+    fig.update_xaxes(
+    title_font=dict(size=20, family='Times New Roman', color='black'),
+    tickfont=dict(size=20, family='Times New Roman', color='black'),
+    gridcolor='lightgrey'
+)
+
     
     return fig
 
@@ -143,23 +166,23 @@ def get_proportion_rejected_correlation_fig(proportion_less_than_005_tos, propor
         selector=dict(type='scatter', mode='markers')
     )
     fig.update_traces(
-        line=dict(color='#c73d47', width=2),
+        line=dict(color='black', width=2),
         selector=dict(type='scatter', mode='lines')
     )
 
 
     # Calculate Spearman correlation and add annotation
     corr, p = spearmanr(list(proportion_less_than_005_tos.values()), list(proportion_less_than_005_toc.values()))
-    fig.add_annotation(
-        x=1, y=1,
-        text = rf'$\hat{{\rho}} = {corr:.4f}$',  # Spearman's rho with 4 decimal precision
-        showarrow=False,
-        font=dict(size=15, color="red"),
-        xref="paper", yref="paper",
-        bgcolor="rgba(255, 255, 255, 0.7)",
-        bordercolor="black",
-        borderwidth=1
-    )
+    # fig.add_annotation(
+    #     x=1, y=1,
+    #     text = rf'$\hat{{\rho}} = {corr:.4f}$',  # Spearman's rho with 4 decimal precision
+    #     showarrow=False,
+    #     font=dict(size=15, color="red"),
+    #     xref="paper", yref="paper",
+    #     bgcolor="rgba(255, 255, 255, 0.7)",
+    #     bordercolor="black",
+    #     borderwidth=1
+    # )
 
     fig = update_figure_format(fig)
 

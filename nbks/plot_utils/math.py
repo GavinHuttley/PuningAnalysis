@@ -148,6 +148,7 @@ def get_evolutionary_rate_change_plot(Q1, Q2, Q3, pi, t_range):
     # create 1x3 subplots with subplot titles
     fig = make_subplots(rows=1, cols=3, subplot_titles=titles)
 
+
     # add each Q to its own subplot
     for i, Q in enumerate(Q, start=1):
         mu_range, _ = mu_mu_prime_range(Q, pi, t_range)  # using your existing helper
@@ -172,7 +173,7 @@ def get_evolutionary_rate_change_plot(Q1, Q2, Q3, pi, t_range):
 
         # set axis labels for this subplot
         fig.update_xaxes(title_text='Time', row=1, col=i)
-        fig.update_yaxes(title_text=r'$\mu$', row=1, col=i)
+        fig.update_yaxes(title_text=r'$\mu$', row=1, col=1)
 
     # style subplot title font size (these are annotations created by plotly)
     for a in fig.layout.annotations:
@@ -185,8 +186,11 @@ def get_evolutionary_rate_change_plot(Q1, Q2, Q3, pi, t_range):
     # optionally a main title or layout tweaks
     fig.update_layout(
         height=380,
-        width=1200,
+        width=1200
     )
+    # tickvals = [0, 0.05, 0.10, 0.15, 0.20]
+    # fig.update_yaxes(tickmode="array", tickvals=tickvals, showgrid=True)  # all subplots
+    # fig.update_yaxes(title_text=r'$\mu$', row=1, col=1)                   
 
     return fig
 

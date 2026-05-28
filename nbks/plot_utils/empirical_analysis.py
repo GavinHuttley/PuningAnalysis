@@ -246,7 +246,7 @@ def get_correlation_factor_histogram(correlation_list):
     # Update layout for presentation
     fig.update_layout(
         yaxis_title='<b>Count</b>',  
-        xaxis_title=r'$\text{Spearman } \hat{\rho}$',  
+        xaxis_title=r'$\Large \hat{\rho}$',  
         showlegend=False 
     )
 
@@ -292,6 +292,28 @@ def get_correlation_factors_distplot(correlation_list):
 
     fig = update_figure_format(fig)
 
+    fig.update_layout(
+    xaxis=dict(
+        title=r'$\Large \hat{\rho} (\delta_{\text{JAD}}, \delta_{\mathbb{t}})$',
+    ),
+    yaxis=dict(
+        title='Density'
+    ),
+    width = 800, height = 600)
+
+    fig.update_yaxes(
+    title_font=dict(
+        size=30,
+        family='Times New Roman',
+        color = 'black'
+))
+    
+    fig.update_xaxes(
+        title_font=dict(
+            color = 'black'
+    ))
+
+
 
     return fig
 
@@ -308,8 +330,9 @@ def get_correlation_factor_tos_rejection_correlation_fig(proportion_less_than_00
 
     fig.update_layout(
         xaxis_title= 'Stationarity rejected %',
-        yaxis_title= r'$\text{Spearman } \hat{\rho}$',
-    )
+        yaxis_title= r'$\Large \hat{\rho}$',
+        margin=dict(b = 160))
+    
 
     # Customize the markers (Change the color to #7ed3f6)
     fig.update_traces(
@@ -324,26 +347,48 @@ def get_correlation_factor_tos_rejection_correlation_fig(proportion_less_than_00
     # Customize the trendline
     fig.update_traces(
         selector=dict(mode='lines'),
-        line=dict(color='#c73d47', width=2)
+        line=dict(color='black', width=2)
     )
 
 
     cor,p = stats.spearmanr(list(proportion_less_than_005_tos.values()), list(corr_list_filtered.values()))
 
-    fig.add_annotation(
-        x=1,  # Adjust x-position of the annotation (relative to x-axis range)
-        y=1,  # Adjust y-position of the annotation (relative to y-axis range)
-        text = rf'$\hat{{\rho}} = {cor:.4f}$',  # R² value with 4 decimal precision
-        showarrow=False,
-        font=dict(size=14, color="red"),
-        xref="paper",  # Positioning relative to the paper (can be set to 'x' and 'y' for data-coordinates)
-        yref="paper",  # Positioning relative to the paper (can be set to 'x' and 'y' for data-coordinates)
-        bgcolor="rgba(255, 255, 255, 0.7)",  # Background color for better visibility
-        bordercolor="black",  # Optional: border around the annotation
-        borderwidth=1
-    )
+    # fig.add_annotation(
+    #     x=1,  # Adjust x-position of the annotation (relative to x-axis range)
+    #     y=1,  # Adjust y-position of the annotation (relative to y-axis range)
+    #     text = rf'$\hat{{\rho}} = {cor:.4f}$',  # R² value with 4 decimal precision
+    #     showarrow=False,
+    #     font=dict(size=14, color="red"),
+    #     xref="paper",  # Positioning relative to the paper (can be set to 'x' and 'y' for data-coordinates)
+    #     yref="paper",  # Positioning relative to the paper (can be set to 'x' and 'y' for data-coordinates)
+    #     bgcolor="rgba(255, 255, 255, 0.7)",  # Background color for better visibility
+    #     bordercolor="black",  # Optional: border around the annotation
+    #     borderwidth=1
+    # )
 
     fig = update_figure_format(fig)
+
+    fig.update_layout(
+        xaxis=dict(
+            title='Stationarity rejected%',
+        ),
+        yaxis=dict(
+            title=r'$\huge \hat{\rho} (\delta_{\text{JAD}}, \delta_{\mathbb{t}})$'
+        ),
+    title_font=dict(size=50, family='Times New Roman', color='black'),
+    width = 800, height = 600, margin=dict(l = 160))
+
+    fig.update_xaxes(
+        title_font=dict(
+            size=25,
+            family='Times New Roman',
+            color = 'black'
+    ))
+
+    fig.update_yaxes(
+        title_font=dict(
+            color = 'black'
+    ))
 
 
     return fig

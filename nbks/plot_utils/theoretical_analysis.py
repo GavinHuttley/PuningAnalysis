@@ -188,11 +188,11 @@ def plot_time_grouped_scatter_2x2(df, x_col, y_col):
     )
 )
     fig.update_xaxes(
-    title_text=r'$\delta (JAD)$', 
+    title_text=r'\Large $\delta (JAD)$', 
     row=2
 )
     fig.update_yaxes(
-        title_text=r'$\delta (ENS)$', 
+        title_text=r'$\Large \delta (ENS)$', 
         col=1
     )
 
@@ -251,28 +251,29 @@ def correlation_factor_plot(df_low, df_high, t_range):
                 mode='lines+markers', 
                 name=f'{condition}',
                 line=dict(dash='dash' if condition == 'Balanced' else 'solid', color='#67a8cd'),
-                marker=dict(symbol='circle' if condition == 'Balanced' else 'square')
+                marker=dict(symbol='circle' if condition == 'Balanced' else 'square'),
+                error_y=dict(type="constant", value=0.012, visible=True)
             ))
 
 
-    # Update layout
-    fig.update_layout(
-        title=None,
-        xaxis_title="<b>Time</b>",
-        yaxis_title=r'$\hat{\rho}$',
-        legend_title="Sequence Composition",
-        showlegend=True,
-        legend=dict(
-            orientation="h",  # Horizontal legend
-            yanchor="bottom",
-            y=-0.3,  # Position legend below the plot
-            xanchor="center",
-            x=0.5,
-            font=dict(size=14),
-        )
-    )
-
     fig = update_figure_format(fig)
+
+    fig.update_layout(
+    title=None,
+    xaxis_title=r'$\LARGE \tau$',
+    yaxis_title=r'$ \LARGE \hat{\rho}$',
+    showlegend=True,
+    legend=dict(
+        title_text='π<sub>0</sub>',
+        orientation="h",  # Horizontal legend
+        yanchor="bottom",
+        y=-0.3,  # Position legend below the plot
+        xanchor="center",
+        x=0.5,
+        title_font=dict(family="Times New Roman", size=20),
+        font=dict(family="Times New Roman", size=20)
+    )
+    )
 
     return fig
 
