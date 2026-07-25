@@ -1,21 +1,22 @@
-
-from cogent3 import get_app, open_data_store
-from cogent3.app.composable import define_app
-from cogent3 import get_app
-from cogent3.app import typing
-import pathlib
 import contextlib
-import tempfile
+import multiprocessing
+import pathlib
 import subprocess
 import sys
+import tempfile
+
 import click
-import multiprocessing
+from cogent3 import get_app, open_data_store
+from cogent3.app import typing
+from cogent3.app.composable import define_app
+
 
 @contextlib.contextmanager
 def tempdir(working_dir: pathlib.Path | str | None = None) -> pathlib.Path:
     """context manager returns a temporary directory in working_dir"""
     with tempfile.TemporaryDirectory(dir=working_dir) as temp_dir:
         yield pathlib.Path(temp_dir)
+
 
 def exec_command(
     cmnd: str,
@@ -31,8 +32,11 @@ def exec_command(
         sys.exit(proc.returncode)
     return out.decode("utf8") if out is not None else None
 
+
 @define_app
-def get_mafft_aligned_seq(seqs: typing.SeqsCollectionType, gc=1) -> typing.AlignedSeqsType:
+def get_mafft_aligned_seq(
+    seqs: typing.SeqsCollectionType, gc=1
+) -> typing.AlignedSeqsType:
     """
     Loads sequences from the input directory, translates them to amino acids,
     aligns using MAFFT, and returns the aligned DNA sequence collection.
@@ -67,58 +71,66 @@ def get_mafft_aligned_seq(seqs: typing.SeqsCollectionType, gc=1) -> typing.Align
 
         # Load the aligned amino acid sequences
         loader_aligned = get_app("load_aligned", format="fasta")
-        aligned_seq_collection = loader_aligned(str(aligned_aa_path)).to_type(array_align=True)        
+        aligned_seq_collection = loader_aligned(str(aligned_aa_path)).to_type(
+            array_align=True
+        )
 
         aligned_seqs = aligned_seq_collection.replace_seqs(seqs)
-        print('successfully aligned')
+        print("successfully aligned")
 
     return aligned_seqs
-        
-mafft_aligner = get_mafft_aligned_seq()   
+
+
+mafft_aligner = get_mafft_aligned_seq()
+
 
 def process_path(in_path, out_dstore):
     """
     Processes the given path by loading, aligning, and writing sequences.
     """
     loader = get_app("load_unaligned", format="fasta", moltype="dna")
-    
+
     writer = get_app("write_seqs", out_dstore, format="fasta")
 
     file_name = in_path.unique_id
     print(f"Processing file: {file_name}")
-    
+
     processer = loader + mafft_aligner
     raw_aligned = processer(in_path)
-    writer(raw_aligned, identifier=f'{file_name}')
-    
+    writer(raw_aligned, identifier=f"{file_name}")
+
 
 @click.command()
-@click.argument('input', type=click.Path(exists=True))
-@click.option('-o', '--output_dir', help='Output directory for JSON files')
-@click.option('-n', '--num_processes', default=multiprocessing.cpu_count(), help='Number of processes to use (default: number of CPUs)')
-@click.option('-l', '--limit', type=int, help='Limit the number of files to process')
+@click.argument("input", type=click.Path(exists=True))
+@click.option("-o", "--output_dir", help="Output directory for JSON files")
+@click.option(
+    "-n",
+    "--num_processes",
+    default=multiprocessing.cpu_count(),
+    help="Number of processes to use (default: number of CPUs)",
+)
+@click.option("-l", "--limit", type=int, help="Limit the number of files to process")
 def main(input, num_processes, output_dir, limit):
     """
     Fit model for sequences in different paths.
-    
+
     INPUT: Path to the directory containing sequence files or a JSON file listing the paths.
     """
-    input_data_store = open_data_store(input, suffix='fa', limit=limit)
+    input_data_store = open_data_store(input, suffix="fa", limit=limit)
     out_dstore = open_data_store(output_dir, mode="w", suffix="fa")
-    
 
     with multiprocessing.Pool(processes=num_processes) as pool:
         pool.starmap(
-            process_path, 
-            [(path, out_dstore) for path in input_data_store.completed]
+            process_path, [(path, out_dstore) for path in input_data_store.completed]
         )
+
+
 if __name__ == "__main__":
     main()
 
 
-
 # @define_app
-# def replace_common_species_names(alignment: SeqsCollectionType	
+# def replace_common_species_names(alignment: SeqsCollectionType
 # ) -> SeqsCollectionType:
 #     with open ('/Users/gulugulu/repos/PuningAnalysis/results/output_data/genome_information/available_species_name.json', 'r') as infile1:
 #         available_species_names = json.load(infile1)
@@ -126,13 +138,13 @@ if __name__ == "__main__":
 #     with open ('/Users/gulugulu/repos/PuningAnalysis/results/output_data/genome_information/common_names.json', 'r') as infile2:
 #         common_names = json.load(infile2)
 #     name_map = dict(zip(available_species_names, common_names))
-    
+
 #     new_names = {}
-    
+
 #     # Iterate through the sequence names in the alignment
 #     for name in alignment.names:
 #         species_info, gene_info = name.split('-', 1)
-        
+
 #         # Check if the species part exists in the name mapping
 #         if species_info in name_map:
 #             # Create a new name using the common name and the gene info
@@ -141,7 +153,7 @@ if __name__ == "__main__":
 #         else:
 #             # If no mapping exists, keep the original name
 #             new_names[name] = name
-    
+
 #     # Update the sequence names in the alignment with new names
 #     return alignment.rename_seqs(lambda x: new_names[x])
 

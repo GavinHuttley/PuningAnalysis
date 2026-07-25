@@ -23,6 +23,13 @@ Home = "https://github.com/GavinHuttley/PuningAnalysis.git"
 cviol_bst = "clock_project.genome_analysis.bootstrapping.clock_violation_bootstrapping:main"
 sviol_bst = "clock_project.genome_analysis.bootstrapping.non_stationarity_bootstrapping:main"
 
+[dependency-groups]
+dev = [
+    "nox>=2026.7.11",
+    "pytest>=9.1.1",
+    "ruff>=0.16.0",
+]
+
 
 
 

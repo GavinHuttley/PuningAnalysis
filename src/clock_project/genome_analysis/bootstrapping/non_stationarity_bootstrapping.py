@@ -1,28 +1,34 @@
-from cogent3.evolve.models import register_model
-from cogent3.evolve.ns_substitution_model import GeneralStationary
-from cogent3 import make_tree, get_app, open_data_store, get_moltype
+import shutil
+import uuid
+from pathlib import Path
+
+import click
+from cogent3 import get_app, get_moltype, make_tree, open_data_store
+from cogent3.app import evo
 from cogent3.app.composable import define_app
 from cogent3.app.typing import AlignedSeqsType, SerialisableType
+from cogent3.evolve.models import register_model
+from cogent3.evolve.ns_substitution_model import GeneralStationary
 from scitrack import CachingLogger
-import uuid
-import click
-from cogent3.app import evo
-from pathlib import Path
-import shutil
 
 
 def configure_parallel(parallel_option: bool, PBS_NCPUS: int) -> dict:
     """returns parallel configuration settings for use as composable.apply_to(**config)"""
-    mpi = None if PBS_NCPUS-1 < 2 else PBS_NCPUS-1  # no point in MPI if < 2 processors
+    mpi = (
+        None if PBS_NCPUS - 1 < 2 else PBS_NCPUS - 1
+    )  # no point in MPI if < 2 processors
     parallel_option = True if mpi else parallel_option
     par_kw = dict(max_workers=mpi, use_mpi=True) if mpi else None
 
     return {"parallel": parallel_option, "par_kw": par_kw}
 
+
 RATE_PARAM_UPPER = 50
+
 
 def get_id(result):
     return result.source.unique_id
+
 
 @register_model("nucleotide")
 def GSN(**kwargs):
@@ -30,6 +36,7 @@ def GSN(**kwargs):
     kwargs["optimise_motif_probs"] = kwargs.get("optimise_motif_probs", True)
     kwargs["name"] = kwargs.get("name", "GSN")
     return GeneralStationary(get_moltype("dna").alphabet, **kwargs)
+
 
 def get_param_rules_upper_limit(model_name, upper):
     """rules to set the upper value for rate matrix terms"""
@@ -40,31 +47,33 @@ def get_param_rules_upper_limit(model_name, upper):
 
 
 @define_app
-def test_hypothesis_non_stationary_model(aln: AlignedSeqsType, num_reps = 100, tree=None, opt_args=None) -> SerialisableType:
-    outgroup_name = aln.info['triples_species_name']['outgroup']
+def test_hypothesis_non_stationary_model(
+    aln: AlignedSeqsType, num_reps=100, tree=None, opt_args=None
+) -> SerialisableType:
+    outgroup_name = aln.info["triples_species_name"]["outgroup"]
     tree = make_tree(tip_names=aln.names)
-    
+
     model_kwargs = dict(
-    tree=tree,
-    opt_args=opt_args,
-    # unique_trees=True,
-    lf_args=dict(discrete_edges=[outgroup_name]),
-    optimise_motif_probs=True,
+        tree=tree,
+        opt_args=opt_args,
+        # unique_trees=True,
+        lf_args=dict(discrete_edges=[outgroup_name]),
+        optimise_motif_probs=True,
     )
     null = evo.model(
-            "GSN",
-            param_rules=get_param_rules_upper_limit("GSN", RATE_PARAM_UPPER),
-            **model_kwargs,
-        )
+        "GSN",
+        param_rules=get_param_rules_upper_limit("GSN", RATE_PARAM_UPPER),
+        **model_kwargs,
+    )
     alt = evo.model(
-            "GN",
-            param_rules=get_param_rules_upper_limit("GN", RATE_PARAM_UPPER),
-            **model_kwargs,
-        )
-    
+        "GN",
+        param_rules=get_param_rules_upper_limit("GN", RATE_PARAM_UPPER),
+        **model_kwargs,
+    )
+
     hyp = evo.hypothesis(null, alt, sequential=True)
     bootstrapper = evo.bootstrap(hyp, num_reps=num_reps, parallel=False)
-    result = bootstrapper(aln)    
+    result = bootstrapper(aln)
     return result
 
 
@@ -90,14 +99,12 @@ _click_command_opts = {
     default=False,
     help="run in parallel (on single machine)",
 )
-
 @click.option(
     "--force",
     is_flag=True,
     default=False,
     help="Force overwrite output directory by deleting existing content.",
 )
-
 def main(input_path, output_dir, mpi, begin, end, num_reps, parallel_option, force):
 
     if force and output_dir.exists():
@@ -116,18 +123,18 @@ def main(input_path, output_dir, mpi, begin, end, num_reps, parallel_option, for
     LOGGER.log_versions("clock_project")
 
     loader = get_app("load_json")
-    
 
-    writer = get_app("write_json", 
-                   data_store=open_data_store(output_dir, mode="w", suffix="json"), id_from_source=get_id)
+    writer = get_app(
+        "write_json",
+        data_store=open_data_store(output_dir, mode="w", suffix="json"),
+        id_from_source=get_id,
+    )
 
     input_dstore = open_data_store(input_path, suffix="json")
 
-    app = loader + test_hypothesis_non_stationary_model(num_reps =  num_reps) + writer
+    app = loader + test_hypothesis_non_stationary_model(num_reps=num_reps) + writer
 
-    parallel_config = configure_parallel(
-        parallel_option=parallel_option, PBS_NCPUS=mpi
-    )
+    parallel_config = configure_parallel(parallel_option=parallel_option, PBS_NCPUS=mpi)
 
     app.apply_to(
         input_dstore[begin:end],
@@ -141,4 +148,3 @@ def main(input_path, output_dir, mpi, begin, end, num_reps, parallel_option, for
 
 if __name__ == "__main__":
     main()
-

@@ -1,9 +1,7 @@
 import pathlib
 import time
-import warnings
 
 from plotly.io import write_image
-
 
 ROOT_DIR = pathlib.Path(__file__)
 while not (ROOT_DIR / "PuningAnalysis").exists():

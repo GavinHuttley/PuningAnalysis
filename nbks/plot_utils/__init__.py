@@ -1,3 +1,5 @@
-import sys, pathlib
+import pathlib
+import sys
+
 # exposé as clock_project.plot_utils
-sys.modules['clock_project.plot_utils'] = sys.modules[__name__]
+sys.modules["clock_project.plot_utils"] = sys.modules[__name__]

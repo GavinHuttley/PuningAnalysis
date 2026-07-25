@@ -1,10 +1,11 @@
-from cogent3 import get_app, open_data_store
+import multiprocessing
+
+import click
 import pandas as pd
 from c3wrangling.score import seed_and_extend_smith_waterman
+from cogent3 import get_app, open_data_store
 from cogent3.app.composable import define_app
 from cogent3.app.typing import UnalignedSeqsType
-import click
-import multiprocessing
 
 trim_stop = get_app("trim_stop_codons", gc=1)
 cpos3 = get_app("take_codon_positions", 3)
@@ -12,10 +13,12 @@ translater = get_app("translate_seqs")
 valid_cds = get_app("select_translatable", frame=1)
 
 
-#functions used in the sequences filtering process
+# functions used in the sequences filtering process
+
 
 def length_divisible_by_three(row):
     return len(row) % 3 == 0
+
 
 def get_score_at_quantile(data, target_quantile):
     """
@@ -40,33 +43,39 @@ def get_score_at_quantile(data, target_quantile):
 def get_matching_score_to_human(seqs):
     names = seqs.names
     for name in names:
-        if name.split('-')[0] == 'homo_sapiens':
+        if name.split("-")[0] == "homo_sapiens":
             reference_name = name
 
     reference = seqs.get_seq(reference_name)
     seq_scores = {}
     for seqid in seqs.names:
         if seqid != reference.name:
-            seq_scores[seqid] =  seed_and_extend_smith_waterman(
-                    reference,
-                    seqs.get_seq(seqid),
-                    k=7,
-                )
-    
+            seq_scores[seqid] = seed_and_extend_smith_waterman(
+                reference,
+                seqs.get_seq(seqid),
+                k=7,
+            )
+
     return seq_scores
+
 
 @define_app
 def too_many_ambigs(seqs: UnalignedSeqsType, frac=0.02) -> UnalignedSeqsType:
     w_ambig = seqs.get_lengths(include_ambiguity=True)
     wo_ambig = seqs.get_lengths(include_ambiguity=False)
-    keep = [name for name in wo_ambig.keys() if wo_ambig[name] / w_ambig[name] >= 1 - frac]
+    keep = [
+        name for name in wo_ambig.keys() if wo_ambig[name] / w_ambig[name] >= 1 - frac
+    ]
     return seqs.take_seqs(keep)
 
+
 @define_app
-def low_matching_significance(seqs: UnalignedSeqsType, quantile=0.05) -> UnalignedSeqsType:
+def low_matching_significance(
+    seqs: UnalignedSeqsType, quantile=0.05
+) -> UnalignedSeqsType:
     names = seqs.names
     for name in names:
-        if name.split('-')[0] == 'homo_sapiens':
+        if name.split("-")[0] == "homo_sapiens":
             ref_name = name
     ref = seqs.get_seq(ref_name)
 
@@ -82,19 +91,18 @@ def low_matching_significance(seqs: UnalignedSeqsType, quantile=0.05) -> Unalign
 
     return seqs
 
+
 @define_app
 def length_divisible_by_three(seqs: UnalignedSeqsType) -> UnalignedSeqsType:
-    valid_seqs = seqs.take_seqs_if(
-        lambda seq: len(seq) % 3 == 0
-    )
+    valid_seqs = seqs.take_seqs_if(lambda seq: len(seq) % 3 == 0)
     return valid_seqs
+
 
 @define_app
 def short_seq(seqs: UnalignedSeqsType, length: int = 600) -> UnalignedSeqsType:
-    valid_seqs = seqs.take_seqs_if(
-        lambda seq: len(seq) >= length
-    )
+    valid_seqs = seqs.take_seqs_if(lambda seq: len(seq) >= length)
     return valid_seqs
+
 
 @define_app
 def remove_redundent_seq(seqs: UnalignedSeqsType) -> UnalignedSeqsType:
@@ -103,7 +111,7 @@ def remove_redundent_seq(seqs: UnalignedSeqsType) -> UnalignedSeqsType:
     seq_names_keep = []
     seq_names_remove = []
     for name in seq_names:
-        genus = name.split('_')[0]
+        genus = name.split("_")[0]
         if genus not in genus_list:
             genus_list.append(genus)
             seq_names_keep.append(name)
@@ -113,12 +121,12 @@ def remove_redundent_seq(seqs: UnalignedSeqsType) -> UnalignedSeqsType:
     valid_seqs = seqs.take_seqs(seq_names_keep)
     return valid_seqs
 
+
 @define_app
 def remove_unresolvable_codon_seqeunce(seqs: UnalignedSeqsType) -> UnalignedSeqsType:
-    valid_seqs = seqs.take_seqs_if(
-        lambda seq: seq.get_translation()
-    )
+    valid_seqs = seqs.take_seqs_if(lambda seq: seq.get_translation())
     return valid_seqs
+
 
 drop_low_matching = low_matching_significance(quantile=0.05)
 drop_ambiguous = too_many_ambigs(frac=0.02)
@@ -129,34 +137,41 @@ trim_stop = get_app("trim_stop_codons", gc=1)
 remove_untranlatable_seqs = remove_unresolvable_codon_seqeunce()
 
 
-
 @click.command()
-@click.argument('input', type=click.Path(exists=True))
-@click.option('-o', '--output_dir', help='Output directory for JSON files')
-@click.option('-n', '--num_processes', default=multiprocessing.cpu_count(), help='Number of processes to use (default: number of CPUs)')
-@click.option('-l', '--limit', type=int, help='Limit the number of files to process')
+@click.argument("input", type=click.Path(exists=True))
+@click.option("-o", "--output_dir", help="Output directory for JSON files")
+@click.option(
+    "-n",
+    "--num_processes",
+    default=multiprocessing.cpu_count(),
+    help="Number of processes to use (default: number of CPUs)",
+)
+@click.option("-l", "--limit", type=int, help="Limit the number of files to process")
 def main(input, num_processes, output_dir, limit):
-    input_data_store = open_data_store(input, suffix='fa', limit=limit)
+    input_data_store = open_data_store(input, suffix="fa", limit=limit)
     out_dstore = open_data_store(output_dir, mode="w", suffix="fa")
     writer = get_app("write_seqs", out_dstore, format="fasta")
     loader = get_app("load_unaligned", format="fasta", moltype="dna")
-    seq_filter = loader + valid_cds + drop_low_matching + drop_short_seq + drop_invalid_length + drop_ambiguous + seq_without_redundent + trim_stop + writer
-    seq_filter.apply_to(input_data_store.completed, parallel=True, par_kw=dict(max_workers=num_processes))
+    seq_filter = (
+        loader
+        + valid_cds
+        + drop_low_matching
+        + drop_short_seq
+        + drop_invalid_length
+        + drop_ambiguous
+        + seq_without_redundent
+        + trim_stop
+        + writer
+    )
+    seq_filter.apply_to(
+        input_data_store.completed,
+        parallel=True,
+        par_kw=dict(max_workers=num_processes),
+    )
 
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
-
 
 
 # def pairwise_jsd_matrix(species_data):
@@ -174,7 +189,6 @@ if __name__ == "__main__":
 #     return jsd_matrix
 
 
-
 # def extract_info(path):
 #     match = re.search(r'/([^/]+)\.fasta$', path)
 #     if match:
@@ -182,18 +196,18 @@ if __name__ == "__main__":
 #     else:
 #         return "unknown"
 
-#def jsd_genetic_distance_scatters(dataframes_dict):
+# def jsd_genetic_distance_scatters(dataframes_dict):
 #     keys = list(dataframes_dict.keys())
 #     rows = int(len(keys) ** 0.5) + 1  # Calculate the number of rows for subplots
 #     cols = (len(keys) + rows - 1) // rows  # Calculate the number of columns
 
 #     fig = make_subplots(rows=rows, cols=cols, subplot_titles=[f'{key}' for key in keys])
-    
+
 #     # Populate subplots
 #     for index, (key, df) in enumerate(dataframes_dict.items(), start=1):
 #         row = (index - 1) // cols + 1
 #         col = (index - 1) % cols + 1
-        
+
 #         fig.add_trace(
 #             go.Scatter(
 #                 x=np.log10(df['JSD Value']),
@@ -210,18 +224,18 @@ if __name__ == "__main__":
 
 #         if row == rows:
 #             fig.update_xaxes(title_text="Log(JSD Value)", row=row, col=col, range=[-6, 0])
-        
+
 #         # Only add y-axis title to first column plots
 #         if col == 1:
 #             fig.update_yaxes(title_text="Genetic Distance", row=row, col=col)
-    
+
 #     fig.update_layout(
 #         height=300 * rows,  # Set a reasonable height based on number of rows
 #         width=300 * cols,   # Set a reasonable width based on number of columns
 #         title_text="Scatter Plots of 3rd codon position JSD Vs Genetic Distance",
 #         showlegend=False
 #     )
-    
+
 #     return fig
 
 

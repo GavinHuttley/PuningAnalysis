@@ -1,8 +1,6 @@
 import dataclasses
 
-from cogent3.app.composable import define_app
 from cogent3.app.result import model_result
-
 
 
 @dataclasses.dataclass(slots=True)
@@ -17,9 +15,7 @@ class BoundsViolation:
     vio: list[dict]
 
 
-
-
-def load_param_values(model_result:model_result) -> ParamRules:
+def load_param_values(model_result: model_result) -> ParamRules:
     """get non-topology param values"""
     return ParamRules(
         source=model_result.source, params=model_result.lf.get_param_rules()
@@ -42,8 +38,7 @@ class get_bounds_violation:
         for param in list_of_params:
             if param["par_name"] not in self.exclude_params:
                 if (abs(param["init"] - param["lower"]) <= 1e-12) or (
-                    abs(param["init"] - param["upper"]) <= 1e-12):
+                    abs(param["init"] - param["upper"]) <= 1e-12
+                ):
                     vio.append(param)
         return BoundsViolation(source=params.source, vio=vio)
-
-

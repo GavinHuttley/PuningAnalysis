@@ -1,5 +1,5 @@
-"""my doctsring
-"""
+"""my doctsring"""
+
 __author__ = "PUNING WANG"
 __copyright__ = "Copyright 2014-2025, Puning Wang"
 __credits__ = ["PUNING WANG"]

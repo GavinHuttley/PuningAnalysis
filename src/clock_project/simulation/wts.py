@@ -1,16 +1,15 @@
 import numpy as np
-from cogent3 import make_seq, get_app
+from cogent3 import Sequence, get_app, make_aligned_seqs, make_seq, make_unaligned_seqs
 from numpy.random import SeedSequence, default_rng
-from cogent3 import make_unaligned_seqs, make_aligned_seqs
-from cogent3 import Sequence
-from cogent3 import make_seq
+
 from clock_project.simulation.magnitude_quantification import calculate_non_stationarity
 
-def join_number_to_base_cogent3(seq):
-    number_to_base = {0: 'T', 1: 'C', 2: 'A', 3: 'G'}
-    ances_seq_join_alpha = ''.join(number_to_base[number] for number in seq)
 
-    return make_seq(''.join(ances_seq_join_alpha), moltype='dna') 
+def join_number_to_base_cogent3(seq):
+    number_to_base = {0: "T", 1: "C", 2: "A", 3: "G"}
+    ances_seq_join_alpha = "".join(number_to_base[number] for number in seq)
+
+    return make_seq("".join(ances_seq_join_alpha), moltype="dna")
 
 
 def transform_Q_to_array(Q_dict):
@@ -24,7 +23,7 @@ def transform_Q_to_array(Q_dict):
     Returns:
         numpy.ndarray: A 4x4 numpy array representing the rate matrix.
     """
-    base_to_index = {'T': 0, 'C': 1, 'G': 2, 'A': 3}
+    base_to_index = {"T": 0, "C": 1, "G": 2, "A": 3}
     matrix = np.zeros((4, 4))
     for from_base, transitions in Q_dict.items():
         from_index = base_to_index[from_base]
@@ -33,8 +32,9 @@ def transform_Q_to_array(Q_dict):
             matrix[from_index, to_index] = rate
     return matrix
 
+
 def convert_sequence_to_numeric(seq: Sequence):
-    base_to_number = {'T': 0, 'C': 1, 'G': 2, 'A': 3}
+    base_to_number = {"T": 0, "C": 1, "G": 2, "A": 3}
     numeric_seq = [base_to_number[base] for base in str(seq)]
     return np.array(numeric_seq)
 
@@ -42,16 +42,16 @@ def convert_sequence_to_numeric(seq: Sequence):
 def convert_sequence_history_to_cogent3_sequence_colletion(history):
     seq_names = []
     for i in range(len(history)):
-        if i == len(history)-1:
-            seq_names.append('ancestor_seq')
-        elif i == len(history)-1:
-            seq_names.append('final_seq')
+        if i == len(history) - 1:
+            seq_names.append("ancestor_seq")
+        elif i == len(history) - 1:
+            seq_names.append("final_seq")
         else:
-            seq_names.append(f'internediate_seq_{i}')
-    
+            seq_names.append(f"internediate_seq_{i}")
+
     seq_base = (join_number_to_base_cogent3(seq) for seq in history)
     data = zip(seq_names, seq_base)
-    seqs = make_unaligned_seqs(data, 'dna')
+    seqs = make_unaligned_seqs(data, "dna")
     return seqs
 
 
@@ -61,32 +61,44 @@ def generate_ancestor(length, pi, rng=None):
         rng = default_rng()
     return list(rng.choice(nucleotides, size=length, p=pi))
 
+
 def generate_rate_matrix():
     matrix = np.zeros((4, 4))
     for i in range(4):
-        row_sum = 0 # sum of non-diagonal elements of current row
+        row_sum = 0  # sum of non-diagonal elements of current row
         for j in range(4):
-            if i != j: # fill up non-diagonal elements of current row
-                element = np.random.uniform(10e-6, 1.0)  # Non-diagonal elements are between 0.01 and 1.0
+            if i != j:  # fill up non-diagonal elements of current row
+                element = np.random.uniform(
+                    10e-6, 1.0
+                )  # Non-diagonal elements are between 0.01 and 1.0
                 row_sum += element
                 matrix[i, j] = element
-        matrix[i,i] = -row_sum # Ensure every row adds up to 0 
+        matrix[i, i] = -row_sum  # Ensure every row adds up to 0
 
     rate_matrix = matrix.tolist()
     return np.array(rate_matrix)
 
+
 class SeqSimulate:
-    def __init__(self, Q: np.array, length: int, num_repeat: int, seed: int, pi: list = None, ancestor: list = None):
+    def __init__(
+        self,
+        Q: np.array,
+        length: int,
+        num_repeat: int,
+        seed: int,
+        pi: list = None,
+        ancestor: list = None,
+    ):
         self.Q = Q
         self.length = length
         self.num_repeat = num_repeat
-        self.pi = pi if pi is not None else [0.25, 0.25, 0.25, 0.25] 
+        self.pi = pi if pi is not None else [0.25, 0.25, 0.25, 0.25]
         self.seed = seed
         self.ss = SeedSequence(self.seed)
         self.child_seeds = self.ss.spawn(self.num_repeat)
         self.rngs = [default_rng(s) for s in self.child_seeds]
         self.ancestor = ancestor
-    
+
     def main(self, max_time):
         results = []
         for i in range(self.num_repeat):
@@ -100,19 +112,28 @@ class SeqSimulate:
             results.append(simulation_result)
         return results
 
-
     def initialize_waiting_times_vectorized(self, DNA_seq, rng):
         n_bases = len(DNA_seq)
-        waiting_times = np.full((n_bases, 4), float('inf'))  # Initialize all waiting times to infinity
+        waiting_times = np.full(
+            (n_bases, 4), float("inf")
+        )  # Initialize all waiting times to infinity
 
         # Iterate through each possible nucleotide transition
         for next_base in range(4):
-            rates = np.array([self.Q[curr_base, next_base] if curr_base != next_base else float('inf') 
-                            for curr_base in DNA_seq])
+            rates = np.array(
+                [
+                    self.Q[curr_base, next_base]
+                    if curr_base != next_base
+                    else float("inf")
+                    for curr_base in DNA_seq
+                ]
+            )
 
             # Calculate waiting times where rates are not infinity
-            valid_rates = rates != float('inf')
-            waiting_times[valid_rates, next_base] = rng.exponential(scale=1.0 / rates[valid_rates])
+            valid_rates = rates != float("inf")
+            waiting_times[valid_rates, next_base] = rng.exponential(
+                scale=1.0 / rates[valid_rates]
+            )
 
         # Find the minimum time and its position
         min_position = np.unravel_index(np.argmin(waiting_times), waiting_times.shape)
@@ -153,7 +174,9 @@ class SeqSimulate:
         while time_passed <= max_time:
             seq_index, new_base = min_position
             substitution_time = min_time
-            min_position, min_time = self.update_waiting_times(DNA_seq, min_position, min_time, rng)
+            min_position, min_time = self.update_waiting_times(
+                DNA_seq, min_position, min_time, rng
+            )
             DNA_seq[seq_index] = new_base
             history.append(DNA_seq.copy())
             time_passed += substitution_time
@@ -166,18 +189,19 @@ class SeqSimulate:
         results = self.main(max_time)
         for simulation in results:
             num_subt = len(simulation) - 1
-            ns_per_site = num_subt/self.length
+            ns_per_site = num_subt / self.length
             ns_per_site_list.append(ns_per_site)
             ns_total_list.append(num_subt)
-        
+
         average_ns_total = np.average(ns_total_list)
-        average_ns_per_site = average_ns_total/self.length
-        
+        average_ns_per_site = average_ns_total / self.length
+
         return ns_per_site_list, average_ns_per_site
 
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+
 
 def get_histograms2(ns_dict, theoretical_ns_list):
     lengths = list(ns_dict.keys())
@@ -186,20 +210,44 @@ def get_histograms2(ns_dict, theoretical_ns_list):
 
     rows = len(lengths)
     cols = len(times)
-    
+
     # Determine global minimum and maximum x values for axis range consistency
-    x_min = min(min(ns_dict[length][time]['ns_per_site_list']) for length in ns_dict for time in ns_dict[length] if time in ns_dict[length])
-    x_max = max(max(ns_dict[length][time]['ns_per_site_list']) for length in ns_dict for time in ns_dict[length] if time in ns_dict[length])
-    
+    x_min = min(
+        min(ns_dict[length][time]["ns_per_site_list"])
+        for length in ns_dict
+        for time in ns_dict[length]
+        if time in ns_dict[length]
+    )
+    x_max = max(
+        max(ns_dict[length][time]["ns_per_site_list"])
+        for length in ns_dict
+        for time in ns_dict[length]
+        if time in ns_dict[length]
+    )
+
     # Create subplots
-    fig = make_subplots(rows=rows, cols=cols, subplot_titles=[f'Time = {t}, Length = {l}' for l in lengths for t in times])
+    fig = make_subplots(
+        rows=rows,
+        cols=cols,
+        subplot_titles=[f"Time = {t}, Length = {l}" for l in lengths for t in times],
+    )
 
     # Populate subplots
     for row, length in enumerate(lengths, start=1):
         for col, time in enumerate(times, start=1):
-            data = ns_dict[length][time]['ns_per_site_list'] if time in ns_dict[length] else []
-            theoretical_ns = theoretical_ns_list[time] if time in theoretical_ns_list else None
-            average_ns = ns_dict[length][time]['avg_ns_per_site'] if time in ns_dict[length] else None
+            data = (
+                ns_dict[length][time]["ns_per_site_list"]
+                if time in ns_dict[length]
+                else []
+            )
+            theoretical_ns = (
+                theoretical_ns_list[time] if time in theoretical_ns_list else None
+            )
+            average_ns = (
+                ns_dict[length][time]["avg_ns_per_site"]
+                if time in ns_dict[length]
+                else None
+            )
 
             # Add histogram to subplot
             fig.add_trace(
@@ -208,36 +256,51 @@ def get_histograms2(ns_dict, theoretical_ns_list):
                     xbins=dict(  # Control the bar widths here
                         start=x_min,
                         end=x_max,
-                        size=(x_max - x_min) / 20  # Adjust size for consistent bar width
+                        size=(x_max - x_min)
+                        / 20,  # Adjust size for consistent bar width
                     ),
                     marker=dict(line=dict(width=1)),
-                    name=f'Length {length}, Time {time}'
+                    name=f"Length {length}, Time {time}",
                 ),
                 row=row,
-                col=col
+                col=col,
             )
-            
+
             # Add vertical lines for average and theoretical values
-            fig.add_vline(x=average_ns, line_width=2, line_dash="dash", line_color="red", row=row, col=col)
-            fig.add_vline(x=theoretical_ns, line_width=2, line_dash="dash", line_color="green", row=row, col=col)
+            fig.add_vline(
+                x=average_ns,
+                line_width=2,
+                line_dash="dash",
+                line_color="red",
+                row=row,
+                col=col,
+            )
+            fig.add_vline(
+                x=theoretical_ns,
+                line_width=2,
+                line_dash="dash",
+                line_color="green",
+                row=row,
+                col=col,
+            )
 
     # Update layout for all subplots
     fig.update_layout(
         height=300 * rows,
         width=300 * cols,
         showlegend=False,
-        bargap=0.05  # Adjust space between bars
+        bargap=0.05,  # Adjust space between bars
     )
-    
+
     # Set consistent x-axis range across all subplots
-    for r in range(1, rows+1):
-        for c in range(1, cols+1):
+    for r in range(1, rows + 1):
+        for c in range(1, cols + 1):
             fig.update_xaxes(range=[x_min, x_max], row=r, col=c)
             fig.update_yaxes(range=[0, 80], row=r, col=c)
     return fig
 
 
-#how to use this class with cogent3 data
+# how to use this class with cogent3 data
 
 # seq = make_seq('ACGTTCGACGA', moltype='dna')
 # pi1 = [0.1, 0.2, 0.3, 0.4]
@@ -251,7 +314,19 @@ def get_histograms2(ns_dict, theoretical_ns_list):
 
 # cogent3_seqs = convert_sequence_history_to_cogent3_sequence_colletion(result)
 
-def taxonomic_triple_simulation(p0, ingoup_Q1, ingroup_Q2, outgroup_Q3, t1, t2, length, num_repeat, seed, ances_seq = None):
+
+def taxonomic_triple_simulation(
+    p0,
+    ingoup_Q1,
+    ingroup_Q2,
+    outgroup_Q3,
+    t1,
+    t2,
+    length,
+    num_repeat,
+    seed,
+    ances_seq=None,
+):
     if ances_seq == None:
         length = len
         ancestor_seq = generate_ancestor(len, p0)
@@ -260,34 +335,43 @@ def taxonomic_triple_simulation(p0, ingoup_Q1, ingroup_Q2, outgroup_Q3, t1, t2, 
         length = len(ancestor_seq)
     simulator1 = SeqSimulate(outgroup_Q3, length, num_repeat, seed, p0, ancestor_seq)
     seqs_inter_node = simulator1.main(max_time=t1)[0]
-    ENS_internal = (len(seqs_inter_node)-1)/length
+    ENS_internal = (len(seqs_inter_node) - 1) / length
     seq_inter_node = seqs_inter_node[-1]
     seqs_edge_3 = simulator1.main(max_time=t2)[0]
     seq_edge_3 = seqs_edge_3[-1]
-    ENS3 = (len(seqs_edge_3)-1)/length
+    ENS3 = (len(seqs_edge_3) - 1) / length
     simulator2 = SeqSimulate(ingoup_Q1, length, num_repeat, seed, p0, seq_inter_node)
     simulator3 = SeqSimulate(ingroup_Q2, length, num_repeat, seed, p0, seq_inter_node)
-    internal_t = t2-t1
+    internal_t = t2 - t1
     seqs_edge_1 = simulator2.main(max_time=internal_t)[0]
     seqs_edge_2 = simulator3.main(max_time=internal_t)[0]
-    ENS1 = (len(seqs_edge_1)-1)/length
-    ENS2 = (len(seqs_edge_2)-1)/length
+    ENS1 = (len(seqs_edge_1) - 1) / length
+    ENS2 = (len(seqs_edge_2) - 1) / length
     seq_edge_1 = seqs_edge_1[-1]
     seq_edge_2 = seqs_edge_2[-1]
     seqs_num = [seq_edge_1, seq_edge_2, seq_edge_3]
     seqs_base = [join_number_to_base_cogent3(seq) for seq in seqs_num]
-    name = ['ingroup_edge1', 'ingroup_edge2', 'outgroup_edge3']
+    name = ["ingroup_edge1", "ingroup_edge2", "outgroup_edge3"]
     data = zip(name, seqs_base)
-    aln  = make_aligned_seqs(data, 'dna')
-    ENSs = {'internal_edge': ENS_internal, 'ingroup_edge1':ENS1,'ingroup_edge2': ENS2, 'outgroup_edge':ENS3}
+    aln = make_aligned_seqs(data, "dna")
+    ENSs = {
+        "internal_edge": ENS_internal,
+        "ingroup_edge1": ENS1,
+        "ingroup_edge2": ENS2,
+        "outgroup_edge": ENS3,
+    }
     return aln, ENSs
+
 
 dist_cal = get_app("fast_slow_dist", fast_calc="tn93", moltype="dna")
 est_tree = get_app("quick_tree", drop_invalid=False)
 tree_func = dist_cal + est_tree
 model = get_app("model", "GN", tree_func=tree_func, time_het="max")
 
-def three_seq_simulation_star_shape(t, Q1, Q2, Q3, p0, length, num_repeat, seed, ancestor_seq = None):
+
+def three_seq_simulation_star_shape(
+    t, Q1, Q2, Q3, p0, length, num_repeat, seed, ancestor_seq=None
+):
     if ancestor_seq == None:
         length = len
         ancestor_seq = generate_ancestor(len, p0)
@@ -298,25 +382,28 @@ def three_seq_simulation_star_shape(t, Q1, Q2, Q3, p0, length, num_repeat, seed,
     simulator2 = SeqSimulate(Q2, length, num_repeat, seed, p0, ancestor_seq)
     simulator3 = SeqSimulate(Q3, length, num_repeat, seed, p0, ancestor_seq)
     seqs_edge_1 = simulator1.main(max_time=t)[0]
-    ENS1 = (len(seqs_edge_1)-1)/length
+    ENS1 = (len(seqs_edge_1) - 1) / length
     seqs_edge_2 = simulator2.main(max_time=t)[0]
-    ENS2 = (len(seqs_edge_2)-1)/length
+    ENS2 = (len(seqs_edge_2) - 1) / length
     seqs_edge_3 = simulator3.main(max_time=t)[0]
-    ENS3 = (len(seqs_edge_3)-1)/length
+    ENS3 = (len(seqs_edge_3) - 1) / length
     seq_edge_1 = seqs_edge_1[-1]
     seq_edge_2 = seqs_edge_2[-1]
     seq_edge_3 = seqs_edge_3[-1]
     seqs_num = [seq_edge_1, seq_edge_2, seq_edge_3]
     seqs_base = [join_number_to_base_cogent3(seq) for seq in seqs_num]
-    name = ['ingroup_edge1', 'ingroup_edge2', 'outgroup_edge3']
+    name = ["ingroup_edge1", "ingroup_edge2", "outgroup_edge3"]
     data = zip(name, seqs_base)
-    aln  = make_aligned_seqs(data, 'dna')
-    ENSs = {'ingroup_edge1':ENS1,'ingroup_edge2': ENS2, 'outgroup_edge':ENS3}
+    aln = make_aligned_seqs(data, "dna")
+    ENSs = {"ingroup_edge1": ENS1, "ingroup_edge2": ENS2, "outgroup_edge": ENS3}
     return aln, ENSs
 
+
 def get_nabla_ENS(result):
-    edge_names = result.tree.get_node_names(includeself = False)
-    matrices = {n:result.lf.get_rate_matrix_for_edge(n, calibrated = True) for n in edge_names}
+    edge_names = result.tree.get_node_names(includeself=False)
+    matrices = {
+        n: result.lf.get_rate_matrix_for_edge(n, calibrated=True) for n in edge_names
+    }
     initial_distribution = result.lf.get_motif_probs()
     branch_length = result.lf.get_lengths_as_ens()
     ens_dict = {}
@@ -328,11 +415,3 @@ def get_nabla_ENS(result):
         ens = ens_dict[edge_name]
         nabla[edge_name] = calculate_non_stationarity(initial_distribution, matrix, ens)
     return matrices, initial_distribution, ens_dict, nabla
-
-
-
-
-
-
-
-

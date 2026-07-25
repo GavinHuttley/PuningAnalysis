@@ -1,29 +1,34 @@
+import multiprocessing
+import shutil
+import uuid
+from pathlib import Path
+
 import click
-from cogent3 import make_tree, get_app, open_data_store
+from cogent3 import get_app, make_tree, open_data_store
 from cogent3.app.composable import define_app
 from cogent3.app.typing import AlignedSeqsType, SerialisableType
 from scitrack import CachingLogger
-import uuid
-from pathlib import Path
-from cogent3.app import evo
-import shutil
-import multiprocessing
-
 
 
 def configure_parallel(parallel_option: bool, PBS_NCPUS: int) -> dict:
     """returns parallel configuration settings for use as composable.apply_to(**config)"""
-    mpi = None if PBS_NCPUS-1 < 2 else PBS_NCPUS-1  # no point in MPI if < 2 processors
+    mpi = (
+        None if PBS_NCPUS - 1 < 2 else PBS_NCPUS - 1
+    )  # no point in MPI if < 2 processors
     parallel_option = True if mpi else parallel_option
     par_kw = dict(max_workers=mpi, use_mpi=True) if mpi else None
 
     return {"parallel": parallel_option, "par_kw": par_kw}
 
+
 def get_id(result):
     return result.source.unique_id
 
+
 @define_app
-def test_hypothesis_clock_model(aln: AlignedSeqsType, tree=None, opt_args=None) -> SerialisableType:
+def test_hypothesis_clock_model(
+    aln: AlignedSeqsType, tree=None, opt_args=None
+) -> SerialisableType:
     outgroup_name = aln.info["triples_species_name"]["outgroup"]
     tree = make_tree(tip_names=aln.names)
     sp1 = aln.info["triples_species_name"]["ingroup1"]
@@ -53,6 +58,7 @@ _click_command_opts = {
     "context_settings": {"show_default": True},
 }
 
+
 @click.command(**_click_command_opts)
 @click.argument("input_path", type=Path)
 @click.option("--output_dir", "-o", type=Path, help="Output directory")
@@ -61,7 +67,12 @@ _click_command_opts = {
 # @click.option(
 #     "--num_reps", "-r", type=int, default=100, help="Number of bootstrap replicates"
 # )
-@click.option('-n', '--num_processes', default=multiprocessing.cpu_count(), help='Number of processes to use (default: number of CPUs)')
+@click.option(
+    "-n",
+    "--num_processes",
+    default=multiprocessing.cpu_count(),
+    help="Number of processes to use (default: number of CPUs)",
+)
 # @click.option("--mpi", "-m", type=int, default=0, help="Number of MPI processes to use")
 # @click.option(
 #     "-p",
@@ -77,7 +88,6 @@ _click_command_opts = {
     default=False,
     help="Force overwrite output directory by deleting existing content.",
 )
-
 def main(input_path, output_dir, num_processes, force):
     # Convert to Path right away
     if force and output_dir.exists():
@@ -94,18 +104,18 @@ def main(input_path, output_dir, num_processes, force):
     LOGGER.log_versions("cogent3")
     LOGGER.log_versions("clock_project")
 
-    
     loader = get_app("load_json")
-    
 
-    writer = get_app("write_json", 
-                   data_store=open_data_store(output_dir, mode="w", suffix="json"), id_from_source=get_id)
-    
+    writer = get_app(
+        "write_json",
+        data_store=open_data_store(output_dir, mode="w", suffix="json"),
+        id_from_source=get_id,
+    )
+
     pipeline = loader + test_hypothesis_clock_model() + writer
 
-
     # parallel_config = configure_parallel(
-    #     parallel_option=parallel_option, 
+    #     parallel_option=parallel_option,
     #     PBS_NCPUS = mpi
     # )
 
@@ -115,10 +125,10 @@ def main(input_path, output_dir, num_processes, force):
         input_dstore,
         show_progress=True,
         logger=LOGGER,
-        parallel=True, 
-        par_kw=dict(max_workers=num_processes)
+        parallel=True,
+        par_kw=dict(max_workers=num_processes),
     )
+
 
 if __name__ == "__main__":
     main()
-
