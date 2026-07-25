@@ -1,5 +1,6 @@
 import pathlib
 import time
+import warnings
 
 from plotly.io import write_image
 
@@ -24,11 +25,8 @@ TABLE_DIR.mkdir(parents=True, exist_ok=True)
 # SUPP_TABLE_DIR = OUTPUT_ROOT / "tables_supp"
 # SUPP_TABLE_DIR.mkdir(parents=True, exist_ok=True)
 
-DATA_DIR = pathlib.Path(__file__)
-while not (DATA_DIR / "clock").exists():
-    DATA_DIR = DATA_DIR.parent
+DATA_DIR = ROOT_DIR / "data"
 
-DATA_DIR = DATA_DIR / 'clock/mammal_orthologs_hsap_1'
 
 class pdf_writer:
     """class that handles super annoying mathjax warning box in plotly pdf's"""
@@ -45,6 +43,7 @@ class pdf_writer:
             time.sleep(2)
             self._done_once = True
 
-        write_image(fig, path, width = width, height=height)
+        write_image(fig, path, width=width, height=height)
+
 
 write_pdf = pdf_writer(width=600, height=800)
