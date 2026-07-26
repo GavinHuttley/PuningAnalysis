@@ -186,7 +186,7 @@ def get_evolutionary_rate_change_plot(Q1, Q2, Q3, pi, t_range):
                 x=x_plot,
                 y=y,
                 mode="lines",
-                line=dict(color="#58B8D1", width=4),
+                line=dict(color="#1f77b4", width=4),
                 showlegend=False,
             ),
             row=1,
