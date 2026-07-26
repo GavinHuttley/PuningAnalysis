@@ -105,7 +105,7 @@ def get_evolutionary_rate_plot(Q, t_range, pi=None):
     fig.update_layout(
         title=None,
         title_font=dict(size=20),  # Increase title size, make it bold
-        xaxis_title="Time",
+        xaxis_title="<b><i>t</i></b>",
         yaxis_title=r"$\mu$",
         legend=dict(
             title=None,
@@ -140,7 +140,7 @@ def get_ens_plot(Q, t_range, pi=None):
     fig.update_layout(
         title=None,
         title_font=dict(size=20),  # Increase title size, make it bold
-        xaxis_title="Time",
+        xaxis_title="<b><i>t</i></b>",
         yaxis_title=r"$ENS$",
     )
     fig = update_figure_format(fig)
@@ -194,7 +194,7 @@ def get_evolutionary_rate_change_plot(Q1, Q2, Q3, pi, t_range):
         )
 
         # set axis labels for this subplot
-        fig.update_xaxes(title_text="Time", row=1, col=i)
+        fig.update_xaxes(title_text="<b><i>t</i></b>", row=1, col=i)
         fig.update_yaxes(title_text=r"$\mu$", row=1, col=1)
 
     # style subplot title font size (these are annotations created by plotly)
@@ -248,7 +248,7 @@ def get_ens_difference_change_two_process(Q1, Q2, t_range, pi=None):
     # Update layout for better presentation
     fig.update_layout(
         title=None,
-        xaxis_title="<b>Time</b>",
+        xaxis_title="<b><i>t</i></b>",
         yaxis_title=r"$ENS$",
         legend=dict(
             title=None,
@@ -304,7 +304,7 @@ def get_clock_violation_change_two_process(Q1, Q2, t_range, pi=None):
     # Update layout for better presentation
     fig.update_layout(
         title=None,
-        xaxis_title="<b>Time</b>",
+        xaxis_title="<b><i>t</i></b>",
         yaxis_title=r"$\mu(t)$",
         legend=dict(
             title=None,
