@@ -128,7 +128,7 @@ def main(input, num_processes, output_dir, limit):
     process = loader + model_fitting_app + writer_json
 
     process.apply_to(
-        input_aln_store.completed, parallel=True, par_kw=dict(max_workers=num_processes)
+        input_aln_store.completed, parallel=True, par_kw={"max_workers": num_processes}
     )
 
 

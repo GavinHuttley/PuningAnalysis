@@ -292,7 +292,7 @@ def get_correlation_factor_histogram(correlation_list):
         y0=0,
         x1=0.2,
         y1=15,
-        line=dict(color="#c73d47", width=4, dash="dashdot"),
+        line={"color": "#c73d47", "width": 4, "dash": "dashdot"},
     )
 
     # Set transparency level and add a solid line around each bar
@@ -300,7 +300,7 @@ def get_correlation_factor_histogram(correlation_list):
         opacity=1,  # Set the transparency (0 = fully transparent, 1 = fully opaque)
         marker_line_color="black",  # Color of the line around each bar
         marker_line_width=1.5,  # Width of the line around each bar
-        xbins=dict(size=0.05),
+        xbins={"size": 0.05},
     )
 
     fig = update_figure_format(fig)
@@ -326,17 +326,19 @@ def get_correlation_factors_distplot(correlation_list):
     fig = update_figure_format(fig)
 
     fig.update_layout(
-        xaxis=dict(
-            title=r"$\Large \hat{\rho} (\delta_{\text{JAD}}, \delta_{\mathbb{t}})$",
-        ),
-        yaxis=dict(title="Density"),
+        xaxis={
+            "title": r"$\Large \hat{\rho} (\delta_{\text{JAD}}, \delta_{\mathbb{t}})$",
+        },
+        yaxis={"title": "Density"},
         width=800,
         height=600,
     )
 
-    fig.update_yaxes(title_font=dict(size=30, family="Times New Roman", color="black"))
+    fig.update_yaxes(
+        title_font={"size": 30, "family": "Times New Roman", "color": "black"}
+    )
 
-    fig.update_xaxes(title_font=dict(color="black"))
+    fig.update_xaxes(title_font={"color": "black"})
 
     return fig
 
@@ -362,21 +364,21 @@ def get_correlation_factor_tos_rejection_correlation_fig(
     fig.update_layout(
         xaxis_title="Stationarity rejected %",
         yaxis_title=r"$\Large \hat{\rho}$",
-        margin=dict(b=160),
+        margin={"b": 160},
     )
 
     # Customize the markers (Change the color to #7ed3f6)
     fig.update_traces(
-        marker=dict(
-            size=8,
-            opacity=0.8,
-            color="#67a8cd",
-        ),
-        selector=dict(mode="markers"),
+        marker={
+            "size": 8,
+            "opacity": 0.8,
+            "color": "#67a8cd",
+        },
+        selector={"mode": "markers"},
     )
 
     # Customize the trendline
-    fig.update_traces(selector=dict(mode="lines"), line=dict(color="black", width=2))
+    fig.update_traces(selector={"mode": "lines"}, line={"color": "black", "width": 2})
 
     cor, p = stats.spearmanr(
         list(proportion_less_than_005_tos.values()), list(corr_list_filtered.values())
@@ -398,20 +400,22 @@ def get_correlation_factor_tos_rejection_correlation_fig(
     fig = update_figure_format(fig)
 
     fig.update_layout(
-        xaxis=dict(
-            title="Stationarity rejected%",
-        ),
-        yaxis=dict(
-            title=r"$\huge \hat{\rho} (\delta_{\text{JAD}}, \delta_{\mathbb{t}})$"
-        ),
-        title_font=dict(size=50, family="Times New Roman", color="black"),
+        xaxis={
+            "title": "Stationarity rejected%",
+        },
+        yaxis={
+            "title": r"$\huge \hat{\rho} (\delta_{\text{JAD}}, \delta_{\mathbb{t}})$"
+        },
+        title_font={"size": 50, "family": "Times New Roman", "color": "black"},
         width=800,
         height=600,
-        margin=dict(l=160),
+        margin={"l": 160},
     )
 
-    fig.update_xaxes(title_font=dict(size=25, family="Times New Roman", color="black"))
+    fig.update_xaxes(
+        title_font={"size": 25, "family": "Times New Roman", "color": "black"}
+    )
 
-    fig.update_yaxes(title_font=dict(color="black"))
+    fig.update_yaxes(title_font={"color": "black"})
 
     return fig

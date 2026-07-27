@@ -40,7 +40,7 @@ def qq_plot_uniform(data, a=0, b=1):
             mode="markers",
             name=None,
             showlegend=False,
-            marker=dict(color="#67a8cd", size=5),
+            marker={"color": "#67a8cd", "size": 5},
         )
     )
 
@@ -52,7 +52,7 @@ def qq_plot_uniform(data, a=0, b=1):
             mode="lines",
             name=None,
             showlegend=False,
-            line=dict(color="red", dash="dash"),
+            line={"color": "red", "dash": "dash"},
         )
     )
 
@@ -98,8 +98,8 @@ def qq_plot_null_observed(data, data2, a=0, b=1):
             y=scaled_data,
             mode="lines",  # or 'lines+markers' if you want points too
             name="<b>-ve</b>",
-            line=dict(color="#67a8cd", shape="spline", smoothing=1.3),
-            marker=dict(color="#67a8cd", size=4),
+            line={"color": "#67a8cd", "shape": "spline", "smoothing": 1.3},
+            marker={"color": "#67a8cd", "size": 4},
         )
     )
 
@@ -109,8 +109,8 @@ def qq_plot_null_observed(data, data2, a=0, b=1):
             y=scaled_data2,
             mode="lines",
             name="<b>obs</b>",
-            line=dict(color="#6fba4f", shape="spline", smoothing=1.3),
-            marker=dict(color="#6fba4f", size=4),
+            line={"color": "#6fba4f", "shape": "spline", "smoothing": 1.3},
+            marker={"color": "#6fba4f", "size": 4},
         )
     )
 
@@ -119,7 +119,7 @@ def qq_plot_null_observed(data, data2, a=0, b=1):
         xaxis_title="Uniform Quantiles",
         yaxis_title=r"$\Large \hat{p}-\text{value}$",
         showlegend=True,
-        legend=dict(font=dict(family="Times New Roman", size=20)),
+        legend={"font": {"family": "Times New Roman", "size": 20}},
     )
 
     fig = update_figure_format(fig)
@@ -127,8 +127,8 @@ def qq_plot_null_observed(data, data2, a=0, b=1):
     fig.update_yaxes(gridcolor="lightgrey")
 
     fig.update_xaxes(
-        title_font=dict(size=20, family="Times New Roman", color="black"),
-        tickfont=dict(size=20, family="Times New Roman", color="black"),
+        title_font={"size": 20, "family": "Times New Roman", "color": "black"},
+        tickfont={"size": 20, "family": "Times New Roman", "color": "black"},
         gridcolor="lightgrey",
     )
 
@@ -159,25 +159,26 @@ def get_proportion_rejected_correlation_fig(
 
     # Update layout for axis titles and legend
     fig.update_layout(
-        xaxis=dict(
-            title="Stationarity rejected%",
-        ),
-        yaxis=dict(
-            title="Clock rejected%",
-        ),
+        xaxis={
+            "title": "Stationarity rejected%",
+        },
+        yaxis={
+            "title": "Clock rejected%",
+        },
     )
 
     # Update traces for markers and trendline
     fig.update_traces(
-        marker=dict(
-            size=8,
-            opacity=0.8,
-            color="#67a8cd",
-        ),
-        selector=dict(type="scatter", mode="markers"),
+        marker={
+            "size": 8,
+            "opacity": 0.8,
+            "color": "#67a8cd",
+        },
+        selector={"type": "scatter", "mode": "markers"},
     )
     fig.update_traces(
-        line=dict(color="black", width=2), selector=dict(type="scatter", mode="lines")
+        line={"color": "black", "width": 2},
+        selector={"type": "scatter", "mode": "lines"},
     )
 
     # Calculate Spearman correlation and add annotation

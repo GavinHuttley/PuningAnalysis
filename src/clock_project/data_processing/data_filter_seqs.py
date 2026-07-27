@@ -166,7 +166,7 @@ def main(input, num_processes, output_dir, limit):
     seq_filter.apply_to(
         input_data_store.completed,
         parallel=True,
-        par_kw=dict(max_workers=num_processes),
+        par_kw={"max_workers": num_processes},
     )
 
 

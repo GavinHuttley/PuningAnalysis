@@ -100,7 +100,7 @@ def main(input, num_processes, output_dir, limit):
     aln_processer.apply_to(
         input_data_store.completed,
         parallel=True,
-        par_kw=dict(max_workers=num_processes),
+        par_kw={"max_workers": num_processes},
     )
 
 

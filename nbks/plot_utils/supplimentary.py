@@ -42,13 +42,18 @@ def get_distirbution_plot(data_dict, x_title, y_title):
 
     fig.update_layout(
         template="plotly_white",
-        margin=dict(l=50, r=50, t=50, b=50),  # Adjust margins for a balanced look
+        margin={
+            "l": 50,
+            "r": 50,
+            "t": 50,
+            "b": 50,
+        },  # Adjust margins for a balanced look
         autosize=True,
         yaxis_title=y_title,  # Explicit y-axis title
         xaxis_title=x_title,  # Explicit x-axis title
-        yaxis_title_font=dict(size=18),  # Adjust y-axis font size
-        xaxis_title_font=dict(size=18),  # Adjust x-axis font size
-        font=dict(size=16),  # General font size for labels and titles
+        yaxis_title_font={"size": 18},  # Adjust y-axis font size
+        xaxis_title_font={"size": 18},  # Adjust x-axis font size
+        font={"size": 16},  # General font size for labels and titles
         width=800,  # Set figure width (optional for better control)
         height=500,  # Set figure height (optional for better control)
         showlegend=False,  # Remove the legend
@@ -107,13 +112,18 @@ def get_rejected_proportion_plot(rejected_proportion_tos, rejected_proportion_to
     # Update layout for presentation
     fig.update_layout(
         template="plotly_white",
-        margin=dict(l=50, r=50, t=50, b=50),  # Adjust margins for a balanced look
+        margin={
+            "l": 50,
+            "r": 50,
+            "t": 50,
+            "b": 50,
+        },  # Adjust margins for a balanced look
         autosize=True,
         yaxis_title="<b>Count</b>",  # Explicit y-axis title
         xaxis_title="<b>Rejected proportion</b>",  # Explicit x-axis title
-        yaxis_title_font=dict(size=20),  # Adjust y-axis font size
-        xaxis_title_font=dict(size=20),  # Adjust x-axis font size
-        font=dict(size=16),  # General font size for labels and titles
+        yaxis_title_font={"size": 20},  # Adjust y-axis font size
+        xaxis_title_font={"size": 20},  # Adjust x-axis font size
+        font={"size": 16},  # General font size for labels and titles
         width=800,  # Set figure width (optional for better control)
         height=500,  # Set figure height (optional for better control)
         showlegend=False,  # Remove the legend
@@ -124,7 +134,7 @@ def get_rejected_proportion_plot(rejected_proportion_tos, rejected_proportion_to
         y0=0,
         x1=0.3,
         y1=35,
-        line=dict(color="#c73d47", width=4, dash="dashdot"),
+        line={"color": "#c73d47", "width": 4, "dash": "dashdot"},
     )
 
     # Set transparency level and add a solid line around each bar
@@ -147,13 +157,18 @@ def get_rejected_proportion_plot(rejected_proportion_tos, rejected_proportion_to
     # Update layout for presentation
     fig2.update_layout(
         template="plotly_white",
-        margin=dict(l=50, r=50, t=50, b=50),  # Adjust margins for a balanced look
+        margin={
+            "l": 50,
+            "r": 50,
+            "t": 50,
+            "b": 50,
+        },  # Adjust margins for a balanced look
         autosize=True,
         yaxis_title="<b>Count</b>",  # Explicit y-axis title
         xaxis_title="<b>Rejected proportion</b>",  # Explicit x-axis title
-        yaxis_title_font=dict(size=20),  # Adjust y-axis font size
-        xaxis_title_font=dict(size=20),  # Adjust x-axis font size
-        font=dict(size=16),  # General font size for labels and titles
+        yaxis_title_font={"size": 20},  # Adjust y-axis font size
+        xaxis_title_font={"size": 20},  # Adjust x-axis font size
+        font={"size": 16},  # General font size for labels and titles
         width=800,  # Set figure width (optional for better control)
         height=500,  # Set figure height (optional for better control)
         showlegend=False,  # Remove the legend
@@ -164,7 +179,7 @@ def get_rejected_proportion_plot(rejected_proportion_tos, rejected_proportion_to
         y0=0,
         x1=0.3,
         y1=35,
-        line=dict(color="#c73d47", width=4, dash="dashdot"),
+        line={"color": "#c73d47", "width": 4, "dash": "dashdot"},
     )
 
     # Set transparency level and add a solid line around each bar
@@ -269,8 +284,8 @@ def plot_r2_by_gene(df):
             y=df["marginal_r^2"],
             mode="lines+markers",
             name="Marginal R²",
-            marker=dict(color="#67a8cd", size=4),
-            line=dict(width=1),
+            marker={"color": "#67a8cd", "size": 4},
+            line={"width": 1},
         )
     )
     fig.add_trace(
@@ -279,26 +294,26 @@ def plot_r2_by_gene(df):
             y=df["conditional_r^2"],
             mode="lines+markers",
             name="Conditional R²",
-            marker=dict(color="#6fba4f", size=4),
-            line=dict(width=1),
+            marker={"color": "#6fba4f", "size": 4},
+            line={"width": 1},
         )
     )
 
     fig.update_layout(
-        xaxis=dict(title="Gene", tickangle=-45),
-        yaxis=dict(title="R²", range=[0, 1]),
+        xaxis={"title": "Gene", "tickangle": -45},
+        yaxis={"title": "R²", "range": [0, 1]},
         template="plotly_white",
         height=500,
         width=1000,
-        margin=dict(b=140),  # room for rotated gene labels
-        legend=dict(
-            title=None,
-            x=0.5,  # Center the legend
-            y=1.1,
-            xanchor="center",
-            yanchor="top",  # Anchor the legend to the top to ensure it's below the plot
-            orientation="h",  # Horizontal orientation
-        ),
+        margin={"b": 140},  # room for rotated gene labels
+        legend={
+            "title": None,
+            "x": 0.5,  # Center the legend
+            "y": 1.1,
+            "xanchor": "center",
+            "yanchor": "top",  # Anchor the legend to the top to ensure it's below the plot
+            "orientation": "h",  # Horizontal orientation
+        },
     )
 
     fig = update_figure_format(fig)
@@ -379,7 +394,7 @@ def get_triple_ens_diff_distirbution_plot(path):
             x=idx_ens,
             y=ens_sorted,
             mode="markers",
-            marker=dict(size=4, color="#6fba4f"),
+            marker={"size": 4, "color": "#6fba4f"},
             name="ENS difference",
         ),
         row=1,
@@ -392,7 +407,7 @@ def get_triple_ens_diff_distirbution_plot(path):
             x=idx_jsd,
             y=jsd_sorted,
             mode="markers",
-            marker=dict(size=4, color="#67a8cd"),
+            marker={"size": 4, "color": "#67a8cd"},
             name="Ingroup JSD",
         ),
         row=2,

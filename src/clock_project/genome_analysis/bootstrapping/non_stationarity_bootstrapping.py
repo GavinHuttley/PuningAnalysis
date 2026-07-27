@@ -18,7 +18,7 @@ def configure_parallel(parallel_option: bool, PBS_NCPUS: int) -> dict:
         None if PBS_NCPUS - 1 < 2 else PBS_NCPUS - 1
     )  # no point in MPI if < 2 processors
     parallel_option = True if mpi else parallel_option
-    par_kw = dict(max_workers=mpi, use_mpi=True) if mpi else None
+    par_kw = {"max_workers": mpi, "use_mpi": True} if mpi else None
 
     return {"parallel": parallel_option, "par_kw": par_kw}
 
@@ -53,13 +53,13 @@ def test_hypothesis_non_stationary_model(
     outgroup_name = aln.info["triples_species_name"]["outgroup"]
     tree = make_tree(tip_names=aln.names)
 
-    model_kwargs = dict(
-        tree=tree,
-        opt_args=opt_args,
+    model_kwargs = {
+        "tree": tree,
+        "opt_args": opt_args,
         # unique_trees=True,
-        lf_args=dict(discrete_edges=[outgroup_name]),
-        optimise_motif_probs=True,
-    )
+        "lf_args": {"discrete_edges": [outgroup_name]},
+        "optimise_motif_probs": True,
+    }
     null = evo.model(
         "GSN",
         param_rules=get_param_rules_upper_limit("GSN", RATE_PARAM_UPPER),

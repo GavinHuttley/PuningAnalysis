@@ -253,13 +253,13 @@ def get_histograms2(ns_dict, theoretical_ns_list):
             fig.add_trace(
                 go.Histogram(
                     x=data,
-                    xbins=dict(  # Control the bar widths here
-                        start=x_min,
-                        end=x_max,
-                        size=(x_max - x_min)
+                    xbins={  # Control the bar widths here
+                        "start": x_min,
+                        "end": x_max,
+                        "size": (x_max - x_min)
                         / 20,  # Adjust size for consistent bar width
-                    ),
-                    marker=dict(line=dict(width=1)),
+                    },
+                    marker={"line": {"width": 1}},
                     name=f"Length {length}, Time {time}",
                 ),
                 row=row,

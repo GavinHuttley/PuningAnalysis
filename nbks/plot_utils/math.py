@@ -97,21 +97,21 @@ def get_evolutionary_rate_plot(Q, t_range, pi=None):
             x=np.linspace(0, 10, 999),
             y=mu_value,
             mode="lines",
-            line=dict(color="#58B8D1", width=4),
+            line={"color": "#58B8D1", "width": 4},
         )
     )
 
     # Update layout for better presentation
     fig.update_layout(
         title=None,
-        title_font=dict(size=20),  # Increase title size, make it bold
+        title_font={"size": 20},  # Increase title size, make it bold
         xaxis_title="<b><i>t</i></b>",
         yaxis_title=r"$\mu$",
-        legend=dict(
-            title=None,
-            x=1.02,  # Adjust position of legend
-            y=1,
-        ),
+        legend={
+            "title": None,
+            "x": 1.02,  # Adjust position of legend
+            "y": 1,
+        },
     )
     fig = update_figure_format(fig)
     return fig
@@ -132,14 +132,14 @@ def get_ens_plot(Q, t_range, pi=None):
 
     fig.add_trace(
         go.Scatter(
-            x=t_range, y=ens_values, mode="lines", line=dict(color="#cd6d2e", width=4)
+            x=t_range, y=ens_values, mode="lines", line={"color": "#cd6d2e", "width": 4}
         )
     )
 
     # Update layout for better presentation
     fig.update_layout(
         title=None,
-        title_font=dict(size=20),  # Increase title size, make it bold
+        title_font={"size": 20},  # Increase title size, make it bold
         xaxis_title="<b><i>t</i></b>",
         yaxis_title=r"$ENS$",
     )
@@ -151,14 +151,14 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
-def get_evolutionary_rate_change_plot(Q1, Q2, Q3, pi, t_range):
+def get_evolutionary_rate_change_plot(Q1, Q2, Q3, pi, t_range, color="#1f77b4"):
 
     t = np.linspace(t_range[0], t_range[1], 100)
 
     Q = [Q1, Q2, Q3]
     titles = [
-        "<b>Monotonic-Decrease</b>",
-        "<b>Monotonic-Increase</b>",
+        "<b>Monotonic Decrease</b>",
+        "<b>Monotonic Increase</b>",
         "<b>Non-Monotonic</b>",
     ]
 
@@ -186,7 +186,7 @@ def get_evolutionary_rate_change_plot(Q1, Q2, Q3, pi, t_range):
                 x=x_plot,
                 y=y,
                 mode="lines",
-                line=dict(color="#1f77b4", width=4),
+                line={"color": color, "width": 4},
                 showlegend=False,
             ),
             row=1,
@@ -199,7 +199,7 @@ def get_evolutionary_rate_change_plot(Q1, Q2, Q3, pi, t_range):
 
     # style subplot title font size (these are annotations created by plotly)
     for a in fig.layout.annotations:
-        a.font = dict(size=16)
+        a.font = {"size": 16}
 
     # keep your post-processing function if you have one
     fig = update_figure_format(fig)
@@ -230,7 +230,7 @@ def get_ens_difference_change_two_process(Q1, Q2, t_range, pi=None):
             y=ens_values2,
             mode="lines",
             name="Species 1",
-            line=dict(color="#62BE9F", width=4),
+            line={"color": "#62BE9F", "width": 4},
         )
     )
 
@@ -241,7 +241,7 @@ def get_ens_difference_change_two_process(Q1, Q2, t_range, pi=None):
             y=ens_values,
             mode="lines",
             name="Species 2",
-            line=dict(color="#AC8AB3", width=4),
+            line={"color": "#AC8AB3", "width": 4},
         )
     )
 
@@ -250,15 +250,15 @@ def get_ens_difference_change_two_process(Q1, Q2, t_range, pi=None):
         title=None,
         xaxis_title="<b><i>t</i></b>",
         yaxis_title=r"$ENS$",
-        legend=dict(
-            title=None,
-            font=dict(size=16),  # Adjust font size of legend
-            x=0.5,  # Center the legend horizontally
-            y=-0.2,  # Position the legend below the plot
-            xanchor="center",
-            yanchor="top",  # Anchor the legend to the top to ensure it's below the plot
-            orientation="h",  # Horizontal orientation
-        ),
+        legend={
+            "title": None,
+            "font": {"size": 16},  # Adjust font size of legend
+            "x": 0.5,  # Center the legend horizontally
+            "y": -0.2,  # Position the legend below the plot
+            "xanchor": "center",
+            "yanchor": "top",  # Anchor the legend to the top to ensure it's below the plot
+            "orientation": "h",  # Horizontal orientation
+        },
     )
     fig = update_figure_format(fig)
     return fig
@@ -277,7 +277,7 @@ def get_clock_violation_change_two_process(Q1, Q2, t_range, pi=None):
             y=mu_range1,
             mode="lines",
             name="Species 2",
-            line=dict(color="#AC8AB3", width=3),
+            line={"color": "#AC8AB3", "width": 3},
         )
     )
 
@@ -287,7 +287,7 @@ def get_clock_violation_change_two_process(Q1, Q2, t_range, pi=None):
             y=mu_range2,
             mode="lines",
             name="Species 1",
-            line=dict(color="#62BE9F", width=3),
+            line={"color": "#62BE9F", "width": 3},
         )
     )
 
@@ -297,7 +297,7 @@ def get_clock_violation_change_two_process(Q1, Q2, t_range, pi=None):
             y=np.abs(np.array(mu_range1) - np.array(mu_range2)),
             mode="lines",
             name="Difference (Clock violation)",
-            line=dict(color="#ff0b00", width=3, dash="dash"),
+            line={"color": "#ff0b00", "width": 3, "dash": "dash"},
         )
     )
 
@@ -306,15 +306,15 @@ def get_clock_violation_change_two_process(Q1, Q2, t_range, pi=None):
         title=None,
         xaxis_title="<b><i>t</i></b>",
         yaxis_title=r"$\mu(t)$",
-        legend=dict(
-            title=None,
-            font=dict(size=16),  # Adjust font size of legend
-            x=0.5,  # Center the legend horizontally
-            y=-0.2,  # Position the legend below the plot
-            xanchor="center",
-            yanchor="top",  # Anchor the legend to the top to ensure it's below the plot
-            orientation="h",  # Horizontal orientation
-        ),
+        legend={
+            "title": None,
+            "font": {"size": 16},  # Adjust font size of legend
+            "x": 0.5,  # Center the legend horizontally
+            "y": -0.2,  # Position the legend below the plot
+            "xanchor": "center",
+            "yanchor": "top",  # Anchor the legend to the top to ensure it's below the plot
+            "orientation": "h",  # Horizontal orientation
+        },
     )
 
     fig = update_figure_format(fig)

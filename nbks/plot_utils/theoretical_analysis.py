@@ -103,10 +103,10 @@ def plot_time_grouped_scatter_2x2(df, x_col, y_col):
                 y=y_data_no_outliers,
                 mode="markers",
                 name=time,  # This will automatically create legend entries
-                marker=dict(
-                    color="#67a8cd",
-                    size=1,  # Adjust size as needed
-                ),
+                marker={
+                    "color": "#67a8cd",
+                    "size": 1,  # Adjust size as needed
+                },
             ),
             row=position[0],
             col=position[1],
@@ -125,7 +125,7 @@ def plot_time_grouped_scatter_2x2(df, x_col, y_col):
                 x=x_data_no_outliers,
                 y=trendline,
                 mode="lines",
-                line=dict(color="firebrick", width=2),  # Deep red for trendlines
+                line={"color": "firebrick", "width": 2},  # Deep red for trendlines
                 showlegend=False,
             ),  # Hide legend for trendline to avoid duplicate entries
             row=position[0],
@@ -140,7 +140,7 @@ def plot_time_grouped_scatter_2x2(df, x_col, y_col):
             y=0.95,
             text=rf"$\hat{{\rho}} = {corr:.4f}$",
             showarrow=False,
-            font=dict(size=10, color="red"),
+            font={"size": 10, "color": "red"},
             align="right",
             ax=0,
             ay=0,
@@ -183,7 +183,7 @@ def plot_time_grouped_scatter_2x2(df, x_col, y_col):
         y0=0,
         x1=0.5,
         y1=1,
-        line=dict(color="black", width=0.5),
+        line={"color": "black", "width": 0.5},
         xref="paper",
         yref="paper",
         layer="above",
@@ -194,7 +194,7 @@ def plot_time_grouped_scatter_2x2(df, x_col, y_col):
         y0=0.5,
         x1=1,
         y1=0.5,
-        line=dict(color="black", width=0.5),
+        line={"color": "black", "width": 0.5},
         xref="paper",
         yref="paper",
         layer="above",
@@ -202,7 +202,7 @@ def plot_time_grouped_scatter_2x2(df, x_col, y_col):
 
     fig.update_layout(showlegend=False)
 
-    fig.update_traces(marker=dict(size=3, opacity=1, line=None))
+    fig.update_traces(marker={"size": 3, "opacity": 1, "line": None})
     fig.update_xaxes(title_text=r"\Large $\delta (JAD)$", row=2)
     fig.update_yaxes(title_text=r"$\Large \delta (ENS)$", col=1)
 
@@ -268,14 +268,14 @@ def correlation_factor_plot(df_low, df_high, t_range):
                     y=filtered_data["Correlation"],
                     mode="lines+markers",
                     name=f"{condition}",
-                    line=dict(
-                        dash="dash" if condition == "Balanced" else "solid",
-                        color="#67a8cd",
-                    ),
-                    marker=dict(
-                        symbol="circle" if condition == "Balanced" else "square"
-                    ),
-                    error_y=dict(type="constant", value=0.012, visible=True),
+                    line={
+                        "dash": "dash" if condition == "Balanced" else "solid",
+                        "color": "#67a8cd",
+                    },
+                    marker={
+                        "symbol": "circle" if condition == "Balanced" else "square"
+                    },
+                    error_y={"type": "constant", "value": 0.012, "visible": True},
                 )
             )
 
@@ -286,16 +286,16 @@ def correlation_factor_plot(df_low, df_high, t_range):
         xaxis_title=r"$\LARGE \tau$",
         yaxis_title=r"$ \LARGE \hat{\rho}$",
         showlegend=True,
-        legend=dict(
-            title_text="π<sub>0</sub>",
-            orientation="h",  # Horizontal legend
-            yanchor="bottom",
-            y=-0.3,  # Position legend below the plot
-            xanchor="center",
-            x=0.5,
-            title_font=dict(family="Times New Roman", size=20),
-            font=dict(family="Times New Roman", size=20),
-        ),
+        legend={
+            "title_text": "π<sub>0</sub>",
+            "orientation": "h",  # Horizontal legend
+            "yanchor": "bottom",
+            "y": -0.3,  # Position legend below the plot
+            "xanchor": "center",
+            "x": 0.5,
+            "title_font": {"family": "Times New Roman", "size": 20},
+            "font": {"family": "Times New Roman", "size": 20},
+        },
     )
 
     return fig
